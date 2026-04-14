@@ -1,0 +1,76 @@
+# =============================================================
+# RetroGuard — root .gitignore
+# (frontend/.gitignore covers Next.js/Node specifics separately)
+# =============================================================
+
+# --------- OS / editor ---------
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/
+*.iml
+
+# --------- Python (backend + ml) ---------
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.Python
+venv/
+.venv/
+env/
+ENV/
+.python-version
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --------- Databases / local state ---------
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# --------- Secrets (never commit) ---------
+.env
+.env.*
+!.env.example
+secrets/
+credentials/
+*.pem
+*.key
+*.crt
+
+# --------- LaTeX build artifacts ---------
+# Keep: *.tex, *.pdf (final deliverable)
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.bbl
+*.blg
+*.nav
+*.snm
+*.vrb
+texput.log
+
+# --------- ML / notebooks ---------
+.ipynb_checkpoints/
+*.ckpt
+*.pt
+*.pth
+*.onnx
+*.tflite
+# Keep ml/output/ so demo artifacts (json/csv/png) ship with repo.
+# If you'd like to exclude them, uncomment:
+# ml/output/
+
+# --------- Misc ---------
+*.tmp
+*.bak
+*.orig
