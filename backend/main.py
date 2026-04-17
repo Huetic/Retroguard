@@ -1,11 +1,17 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from database import engine, SessionLocal, Base
 from models import HighwayAsset, Measurement, Alert, MaintenanceOrder  # noqa: F401 — ensure tables registered
 from seed_data import seed
 
-from routers import assets, measurements, alerts, dashboard, reports
+from routers import assets, measurements, alerts, dashboard, reports, uploads
+
+UPLOAD_DIR = Path(__file__).resolve().parent / "uploads"
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI(
     title="RetroGuard API",
@@ -22,12 +28,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Serve uploaded images
+app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
+
 # Mount routers
 app.include_router(assets.router)
 app.include_router(measurements.router)
 app.include_router(alerts.router)
 app.include_router(dashboard.router)
 app.include_router(reports.router)
+app.include_router(uploads.router)
 
 
 @app.on_event("startup")
