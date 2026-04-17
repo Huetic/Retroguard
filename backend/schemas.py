@@ -136,3 +136,74 @@ class ComplianceReport(BaseModel):
     compliance_pct: float
     assets_by_type: dict
     critical_assets: List[AssetResponse]
+
+
+# ── Maintenance ──────────────────────────────────────────────────────────────
+
+class MaintenanceOrderCreate(BaseModel):
+    asset_id: int
+    priority_score: float = Field(ge=0, le=10)
+    status: Optional[str] = Field(default="pending", pattern="^(pending|scheduled|completed)$")
+    scheduled_date: Optional[datetime] = None
+    notes: Optional[str] = None
+
+
+class MaintenanceOrderUpdate(BaseModel):
+    priority_score: Optional[float] = Field(default=None, ge=0, le=10)
+    status: Optional[str] = Field(default=None, pattern="^(pending|scheduled|completed)$")
+    scheduled_date: Optional[datetime] = None
+    notes: Optional[str] = None
+
+
+class MaintenanceOrderResponse(BaseModel):
+    id: int
+    asset_id: int
+    priority_score: float
+    status: str
+    scheduled_date: Optional[datetime]
+    notes: Optional[str]
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# ── ML ────────────────────────────────────────────────────────────────────────
+
+class RLEstimateRequest(BaseModel):
+    image_path: str
+    asset_id: Optional[int] = None
+    irc_minimum: Optional[float] = None
+    distance: Optional[float] = 30.0
+    angle: Optional[float] = 0.2
+
+
+class RLEstimateResponse(BaseModel):
+    rl_value: float
+    brightness: float
+    confidence: float
+    distance_m: float
+    angle_deg: float
+    classification: dict
+    engine: str
+
+
+class DetectionResponse(BaseModel):
+    class_: str = Field(alias="class")
+    confidence: float
+    bbox: List[float]
+
+    class Config:
+        populate_by_name = True
+
+
+class PredictionSeriesPoint(BaseModel):
+    day: int
+    date: str
+    rl: float
+    is_forecast: bool
+
+
+class PredictionResponse(BaseModel):
+    summary: dict
+    series: List[PredictionSeriesPoint]

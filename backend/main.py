@@ -1,16 +1,33 @@
+from contextlib import asynccontextmanager
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from database import engine, SessionLocal, Base
 from models import HighwayAsset, Measurement, Alert, MaintenanceOrder  # noqa: F401 — ensure tables registered
 from seed_data import seed
 
-from routers import assets, measurements, alerts, dashboard, reports
+from routers import assets, measurements, alerts, dashboard, reports, ml, maintenance, qr
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+    try:
+        seed(db)
+    finally:
+        db.close()
+    yield
+
 
 app = FastAPI(
     title="RetroGuard API",
     description="AI-powered retroreflectivity assessment system for Indian national highways",
-    version="1.0.0",
+    version="1.1.0",
+    lifespan=lifespan,
 )
 
 # CORS — allow all origins for development
@@ -28,18 +45,14 @@ app.include_router(measurements.router)
 app.include_router(alerts.router)
 app.include_router(dashboard.router)
 app.include_router(reports.router)
+app.include_router(ml.router)
+app.include_router(maintenance.router)
+app.include_router(qr.router)
 
-
-@app.on_event("startup")
-def on_startup():
-    # Create all tables
-    Base.metadata.create_all(bind=engine)
-    # Seed if database is empty
-    db = SessionLocal()
-    try:
-        seed(db)
-    finally:
-        db.close()
+# Serve uploaded images so frontend can display them via image_path
+_UPLOADS = Path(__file__).resolve().parent / "uploads"
+_UPLOADS.mkdir(exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(_UPLOADS)), name="uploads")
 
 
 @app.get("/")

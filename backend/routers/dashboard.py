@@ -128,6 +128,35 @@ def highway_health(db: Session = Depends(get_db)):
     return sorted(results, key=lambda h: h.compliance_pct)
 
 
+@router.get("/predict/{asset_id}")
+def predict_asset(asset_id: int, horizon_days: int = 720, db: Session = Depends(get_db)):
+    """Forecast R_L for an asset. Thin shim around /api/ml/predict/{asset_id}."""
+    from ml_service import predict_degradation
+    asset = db.query(HighwayAsset).filter(HighwayAsset.id == asset_id).first()
+    if not asset:
+        raise HTTPException(404, "Asset not found")
+    hist = (
+        db.query(Measurement)
+        .filter(Measurement.asset_id == asset_id)
+        .order_by(Measurement.measured_at.asc())
+        .all()
+    )
+    if len(hist) < 2:
+        raise HTTPException(400, "Need at least 2 measurements to predict")
+    install = asset.installation_date or hist[0].measured_at
+    pts = [
+        {"day": max((m.measured_at - install).days, 0), "rl": m.rl_value}
+        for m in hist
+    ]
+    return predict_degradation(
+        measurements=pts,
+        irc_minimum=asset.irc_minimum_rl,
+        material=(asset.material_grade or "high_intensity").lower().replace(" ", "_"),
+        install_date=install,
+        horizon_days=horizon_days,
+    )
+
+
 @router.get("/heatmap", response_model=List[HeatmapPoint])
 def heatmap_data(db: Session = Depends(get_db)):
     assets = db.query(HighwayAsset).all()
