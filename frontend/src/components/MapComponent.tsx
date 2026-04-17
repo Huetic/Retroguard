@@ -57,6 +57,7 @@ export default function MapComponent({
         zoom={zoom}
         style={{ height: "100%", width: "100%", borderRadius: "12px" }}
         scrollWheelZoom={true}
+        zoomControl={false}
       >
         <SetViewOnLoad />
         <TileLayer

@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import {
   Layers,
   Locate,
@@ -14,8 +14,9 @@ import {
   Radio,
   TrendingDown,
   ChevronRight,
+  RefreshCw,
 } from "lucide-react";
-import { mapAssets } from "../../data/sampleData";
+import { api, useApi, type UiAsset } from "../../lib/api";
 
 const MapComponent = dynamic(() => import("../../components/MapComponent"), {
   ssr: false,
@@ -48,10 +49,16 @@ const highwayNames: Record<string, string> = {
 export default function MapPage() {
   const [activeHighway, setActiveHighway] = useState<string>("all");
 
+  const { data: assets, loading } = useApi<UiAsset[]>(
+    () => api.listAssets(),
+    []
+  );
+  const allAssets = assets ?? [];
+
   const filteredAssets = useMemo(() => {
-    if (activeHighway === "all") return mapAssets;
-    return mapAssets.filter((a) => a.highway === activeHighway);
-  }, [activeHighway]);
+    if (activeHighway === "all") return allAssets;
+    return allAssets.filter((a) => a.highway === activeHighway);
+  }, [activeHighway, allAssets]);
 
   const compliant = filteredAssets.filter((a) => a.status === "compliant").length;
   const warning   = filteredAssets.filter((a) => a.status === "warning").length;
@@ -62,7 +69,7 @@ export default function MapPage() {
   const highwayStats = useMemo(() => {
     const codes = ["NH-48", "NH-44", "NH-27", "NH-66", "DME"];
     return codes.map((code) => {
-      const a = mapAssets.filter((x) => x.highway === code);
+      const a = allAssets.filter((x) => x.highway === code);
       const c = a.filter((x) => x.status === "compliant").length;
       const w = a.filter((x) => x.status === "warning").length;
       const cr = a.filter((x) => x.status === "critical").length;
@@ -79,43 +86,152 @@ export default function MapPage() {
         criticalPct:  Math.round((cr / t) * 100),
       };
     });
-  }, []);
+  }, [allAssets]);
 
   const spotlight = useMemo(
     () =>
-      [...mapAssets]
+      [...allAssets]
         .filter((a) => a.status === "critical")
         .sort((a, b) => (a.currentRL - a.ircMin) - (b.currentRL - b.ircMin))
         .slice(0, 3),
-    []
+    [allAssets]
   );
+
+  /* --------- Responsive inverted-L clip-path -----------------
+     armW and armH are measured live from the hero bar + right
+     sidebar, with a small buffer added. Updates on resize.      */
+  const heroRef     = useRef<HTMLDivElement>(null);
+  const rightColRef = useRef<HTMLDivElement>(null);
+  const BUFFER = 18;
+  const [armDims, setArmDims] = useState({ armW: 360, armH: 225 });
+
+  useEffect(() => {
+    const measure = () => {
+      const hero = heroRef.current;
+      const col  = rightColRef.current;
+      if (!hero || !col) return;
+      const heroRect = hero.getBoundingClientRect();
+      const colRect  = col.getBoundingClientRect();
+      const vw = window.innerWidth;
+
+      // Top arm height = how far down the hero bar reaches + buffer
+      const armH = Math.round(heroRect.bottom + BUFFER);
+      // Right arm width = how far from the right edge the right column sits
+      const armW = Math.round(vw - colRect.left + BUFFER);
+
+      setArmDims((prev) =>
+        prev.armW === armW && prev.armH === armH ? prev : { armW, armH }
+      );
+    };
+
+    measure();
+
+    const ro = new ResizeObserver(measure);
+    if (heroRef.current)     ro.observe(heroRef.current);
+    if (rightColRef.current) ro.observe(rightColRef.current);
+    window.addEventListener("resize", measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, []);
+
+  const glassLClipPath = useMemo(() => {
+    const { armW, armH } = armDims;
+    const r = 28;
+    const steps = 12;
+
+    const arcPoints: string[] = [];
+    for (let i = 0; i <= steps; i++) {
+      const t = (Math.PI / 2) * (i / steps);
+      const dxFromRight = armW + r - r * Math.cos(t);
+      const y = armH + r - r * Math.sin(t);
+      arcPoints.push(
+        `calc(100% - ${dxFromRight.toFixed(2)}px) ${y.toFixed(2)}px`
+      );
+    }
+
+    return `polygon(
+      0 0,
+      100% 0,
+      100% 100%,
+      calc(100% - ${armW}px) 100%,
+      ${arcPoints.join(",\n      ")},
+      0 ${armH}px
+    )`;
+  }, [armDims]);
 
   return (
     <div
-      className="relative rounded-[22px] overflow-hidden"
-      style={{ height: "calc(100vh - 24px)" }}
+      className="relative -m-3 overflow-hidden"
+      style={{ height: "100vh" }}
     >
-      {/* =================== MAP FILLS BACKGROUND =================== */}
-      <div className="absolute inset-0">
-        <MapComponent assets={filteredAssets} />
+      {/* =================== MAP FILLS FULL VIEWPORT =================== */}
+      {/* Fixed so it extends behind the sidebar too — the glass tray can then blur it */}
+      <div className="fixed inset-0 z-0">
+        <MapComponent assets={filteredAssets} center={[25.0, 82.0]} zoom={5} />
       </div>
 
       {/* =================== GLASS OVERLAYS =================== */}
 
-      {/* ----- Top bar (glass) — search + account ----- */}
-      <div className="absolute top-4 left-4 right-4 z-[1500] flex items-start justify-between gap-4 rise">
-        {/* Left: breadcrumb + search */}
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="glass-chip h-10 px-4 rounded-full flex items-center gap-2 text-[12px] text-ink/70 font-medium shrink-0">
-            <span className="font-semibold text-ink">RetroGuard</span>
-            <span className="text-ink/30">/</span>
-            <span className="truncate">Corridor map</span>
-          </div>
+      {/* ----- Seamless inverted-L glass backdrop (single element, clip-path'd) ----- */}
+      <div
+        aria-hidden
+        className="absolute inset-0 z-[1400] pointer-events-none rise"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(251,247,236,0.62) 0%, rgba(251,247,236,0.48) 100%)",
+          backdropFilter: "blur(22px) saturate(170%)",
+          WebkitBackdropFilter: "blur(22px) saturate(170%)",
+          clipPath: glassLClipPath,
+          boxShadow:
+            "inset 0 1px 0 rgba(255,255,255,0.65), inset 0 0 0 1px rgba(255,255,255,0.30)",
+          animationDelay: "40ms",
+        }}
+      />
 
-          <button className="glass-chip h-10 px-4 rounded-full flex items-center gap-2 text-[12px] text-ink/60 min-w-[220px] hover:text-ink transition">
-            <Search className="w-[15px] h-[15px]" strokeWidth={1.8} />
-            <span>Search asset, km, highway…</span>
-          </button>
+
+      {/* ----- Top bar (glass) — breadcrumb / search / status / account ----- */}
+      <div className="absolute top-4 left-4 right-4 z-[1500] flex items-center gap-2 rise">
+        {/* Breadcrumb */}
+        <div className="glass-chip h-10 px-4 rounded-full flex items-center gap-2 text-[12px] text-ink/70 font-medium shrink-0">
+          <span className="font-semibold text-ink">RetroGuard</span>
+          <span className="text-ink/30">/</span>
+          <span className="truncate">Corridor map</span>
+        </div>
+
+        {/* Search — flex-1 so it grows to fill available width */}
+        <button className="glass-chip h-10 px-4 rounded-full flex items-center gap-2 text-[12px] text-ink/60 flex-1 min-w-[180px] hover:text-ink transition">
+          <Search className="w-[15px] h-[15px] shrink-0" strokeWidth={1.8} />
+          <span className="truncate">Search asset, km, highway, alert id…</span>
+          <span className="ml-auto shrink-0 flex items-center gap-1 text-[10px] font-mono tabular text-ink/40 border border-ink/10 rounded-md px-1.5 py-[1px]">
+            ⌘ K
+          </span>
+        </button>
+
+        {/* Live status chip — fills the mid-space with useful context */}
+        <div className="glass-chip h-10 pl-3 pr-4 rounded-full flex items-center gap-2.5 text-[11.5px] shrink-0">
+          <span
+            className="inline-block w-1.5 h-1.5 rounded-full animate-pulse-dot"
+            style={{
+              background: loading ? "var(--color-caution)" : "var(--color-go)",
+            }}
+          />
+          <span className="text-ink/80 font-medium">
+            {loading ? "Syncing…" : "Network healthy"}
+          </span>
+          <span className="text-ink/25">·</span>
+          <span className="font-mono tabular text-ink/55">
+            {allAssets.length} nodes
+          </span>
+          <span className="text-ink/25">·</span>
+          <span className="font-mono tabular text-ink/55">uplink 47ms</span>
+        </div>
+
+        {/* Last sync timestamp */}
+        <div className="glass-chip h-10 px-3.5 rounded-full flex items-center gap-2 text-[11px] text-ink/65 font-mono tabular shrink-0">
+          <RefreshCw className="w-[13px] h-[13px] text-ink/50" strokeWidth={1.8} />
+          <span>14:32 IST</span>
         </div>
 
         {/* Right: tools + account */}
@@ -139,58 +255,70 @@ export default function MapPage() {
         </div>
       </div>
 
-      {/* ----- Hero glass panel (top-left) ----- */}
+      {/* ----- Hero glass bar (top, stretched horizontally) ----- */}
       <div
-        className="absolute top-20 left-4 z-[1500] glass rounded-[22px] p-6 max-w-[420px] rise"
+        ref={heroRef}
+        className="absolute top-20 left-4 right-[340px] z-[1500] glass rounded-[20px] px-6 py-4 flex items-center gap-6 rise"
         style={{ animationDelay: "80ms" }}
       >
-        <div className="flex items-center gap-2 text-[10.5px] uppercase tracking-[0.22em] text-ink/55 mb-3">
-          <span
-            className="w-1.5 h-1.5 rounded-full animate-pulse-dot"
-            style={{ background: "var(--color-orange)" }}
-          />
-          Corridor map
+        {/* Title block */}
+        <div className="shrink-0">
+          <div className="flex items-center gap-2 text-[9.5px] uppercase tracking-[0.22em] text-ink/55 mb-1.5">
+            <span
+              className="w-1.5 h-1.5 rounded-full animate-pulse-dot"
+              style={{ background: "var(--color-orange)" }}
+            />
+            Corridor map
+          </div>
+          <h1 className="text-[24px] font-semibold tracking-[-0.018em] leading-[1] text-ink whitespace-nowrap">
+            Geography,{" "}
+            <span className="text-ink/55 font-normal">at a glance.</span>
+          </h1>
         </div>
-        <h1 className="text-[36px] font-semibold tracking-[-0.018em] leading-[1.02] text-ink">
-          Geography,
-          <br />
-          <span className="text-ink/65 font-normal">at a glance.</span>
-        </h1>
 
-        {/* Status counts inline */}
-        <div className="mt-5 pt-5 border-t border-ink/10 grid grid-cols-3 gap-3">
-          <InlineStat tone="go"      value={compliant} label="Compliant" />
-          <InlineStat tone="caution" value={warning}   label="Warning" />
-          <InlineStat tone="alarm"   value={critical}  label="Critical" />
+        {/* Divider */}
+        <div className="w-px h-11 bg-ink/10 shrink-0" />
+
+        {/* Status counts (horizontal) */}
+        <div className="flex items-center gap-5 shrink-0">
+          <InlineStatH tone="go"      value={compliant} label="Compliant" />
+          <InlineStatH tone="caution" value={warning}   label="Warning" />
+          <InlineStatH tone="alarm"   value={critical}  label="Critical" />
         </div>
-      </div>
 
-      {/* ----- Corridor filter chips (below hero, left column) ----- */}
-      <div
-        className="absolute left-4 z-[1500] flex flex-wrap gap-1.5 max-w-[420px] rise"
-        style={{ top: "calc(50% - 20px)", animationDelay: "160ms" }}
-      >
-        <CorridorChip
-          label="All corridors"
-          count={mapAssets.length}
-          active={activeHighway === "all"}
-          onClick={() => setActiveHighway("all")}
-        />
-        {highwayStats.map((h) => (
-          <CorridorChip
-            key={h.code}
-            label={h.code}
-            count={h.total}
-            active={activeHighway === h.code}
-            onClick={() =>
-              setActiveHighway(activeHighway === h.code ? "all" : h.code)
-            }
-          />
-        ))}
+        {/* Divider */}
+        <div className="w-px h-11 bg-ink/10 shrink-0" />
+
+        {/* Corridor filter chips — fills remaining space */}
+        <div className="flex-1 min-w-0">
+          <div className="text-[9px] uppercase tracking-[0.22em] text-ink/50 font-medium mb-1.5">
+            Filter by corridor
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            <CorridorChip
+              label="All"
+              count={allAssets.length}
+              active={activeHighway === "all"}
+              onClick={() => setActiveHighway("all")}
+            />
+            {highwayStats.map((h) => (
+              <CorridorChip
+                key={h.code}
+                label={h.code}
+                count={h.total}
+                active={activeHighway === h.code}
+                onClick={() =>
+                  setActiveHighway(activeHighway === h.code ? "all" : h.code)
+                }
+              />
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* ----- Right sidebar glass column ----- */}
       <div
+        ref={rightColRef}
         className="absolute top-20 right-4 bottom-4 z-[1500] w-[320px] flex flex-col gap-3 rise"
         style={{ animationDelay: "120ms" }}
       >
@@ -405,36 +533,33 @@ export default function MapPage() {
         </div>
       </div>
 
-      {/* ----- Map tools (bottom-left floating buttons) ----- */}
+      {/* ----- Bottom-left action dock (tools stacked over add-asset CTA) ----- */}
       <div
-        className="absolute bottom-4 left-4 z-[1500] flex flex-col gap-1.5 rise"
+        className="absolute bottom-4 left-4 z-[1500] glass rounded-[18px] p-1.5 flex flex-col gap-1 rise"
         style={{ animationDelay: "200ms" }}
       >
-        <MapTool icon={Layers}    label="Layers" />
-        <MapTool icon={Locate}    label="Center on India" />
-        <MapTool icon={Maximize2} label="Fullscreen" />
-      </div>
+        {/* Map tool icons row */}
+        <div className="flex items-center gap-1 justify-between px-1 pt-0.5">
+          <DockTool icon={Layers}    label="Layers" />
+          <DockTool icon={Locate}    label="Center on India" />
+          <DockTool icon={Maximize2} label="Fullscreen" />
+        </div>
 
-      {/* ----- Add asset CTA (bottom-center, hero button) ----- */}
-      <div
-        className="absolute bottom-4 z-[1500] rise"
-        style={{
-          left: "50%",
-          transform: "translateX(-50%)",
-          animationDelay: "240ms",
-        }}
-      >
+        {/* Divider */}
+        <span className="h-px w-full bg-ink/10 my-0.5" />
+
+        {/* Add asset pill */}
         <button
-          className="pill text-white font-medium gap-2 h-12 px-6 text-[13px] shadow-[0_12px_30px_-10px_rgba(255,107,53,0.7)] hover:brightness-110 transition"
+          className="h-10 pl-3.5 pr-4 rounded-[12px] text-white font-medium text-[12.5px] flex items-center gap-2 shadow-[0_10px_22px_-10px_rgba(255,107,53,0.75)] hover:brightness-110 transition"
           style={{ background: "linear-gradient(135deg, #FF8B5A, #E85A26)" }}
         >
-          <Plus className="w-4 h-4" strokeWidth={2.25} />
+          <Plus className="w-3.5 h-3.5" strokeWidth={2.25} />
           Add asset
-          <span className="mx-1 h-4 w-px bg-white/30" />
-          <span className="text-[11px] font-mono tabular text-white/80">
+          <span className="mx-0.5 h-3.5 w-px bg-white/35" />
+          <span className="text-[10.5px] font-mono tabular text-white/85">
             {activeHighway === "all" ? "any corridor" : activeHighway}
           </span>
-          <ArrowUpRight className="w-3.5 h-3.5 text-white/80" />
+          <ArrowUpRight className="w-3 h-3 text-white/80" />
         </button>
       </div>
     </div>
@@ -445,7 +570,7 @@ export default function MapPage() {
    Small shared pieces
    ========================================================== */
 
-function InlineStat({
+function InlineStatH({
   tone,
   value,
   label,
@@ -461,16 +586,18 @@ function InlineStat({
       ? "var(--color-caution)"
       : "var(--color-alarm)";
   return (
-    <div>
-      <div className="flex items-center gap-1.5 text-[9.5px] uppercase tracking-[0.14em] text-ink/55 font-medium mb-1">
-        <span
-          className="w-1.5 h-1.5 rounded-full"
-          style={{ background: color }}
-        />
-        {label}
-      </div>
-      <div className="text-[22px] font-semibold text-ink leading-none tabular">
-        {value}
+    <div className="flex items-center gap-2.5">
+      <span
+        className="w-2 h-2 rounded-full shrink-0"
+        style={{ background: color, boxShadow: `0 0 0 3px ${color}22` }}
+      />
+      <div className="leading-tight">
+        <div className="text-[22px] font-semibold text-ink leading-none tabular">
+          {value}
+        </div>
+        <div className="text-[9px] uppercase tracking-[0.16em] text-ink/50 font-medium mt-1">
+          {label}
+        </div>
       </div>
     </div>
   );
@@ -490,10 +617,10 @@ function CorridorChip({
   return (
     <button
       onClick={onClick}
-      className={`h-9 px-3.5 rounded-full text-[12px] font-medium flex items-center gap-2 transition ${
+      className={`h-8 px-3 rounded-full text-[11.5px] font-medium flex items-center gap-1.5 transition ${
         active
-          ? "text-white shadow-[0_8px_20px_-8px_rgba(255,107,53,0.75)]"
-          : "glass-chip text-ink/75 hover:text-ink"
+          ? "text-white shadow-[0_6px_16px_-6px_rgba(255,107,53,0.7)]"
+          : "bg-ink/[0.05] text-ink/70 hover:bg-ink/[0.08] hover:text-ink"
       }`}
       style={{
         background: active
@@ -513,7 +640,7 @@ function CorridorChip({
   );
 }
 
-function MapTool({
+function DockTool({
   icon: Icon,
   label,
 }: {
@@ -524,9 +651,9 @@ function MapTool({
     <button
       aria-label={label}
       title={label}
-      className="glass-chip w-10 h-10 rounded-[12px] flex items-center justify-center text-ink/65 hover:text-ink transition"
+      className="w-10 h-10 rounded-[11px] flex items-center justify-center text-ink/65 hover:text-ink hover:bg-ink/[0.06] transition"
     >
-      <Icon className="w-[16px] h-[16px]" strokeWidth={1.8} />
+      <Icon className="w-[15px] h-[15px]" strokeWidth={1.8} />
     </button>
   );
 }

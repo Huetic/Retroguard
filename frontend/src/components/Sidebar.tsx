@@ -11,7 +11,7 @@ import {
   ScrollText,
   ChevronsDown,
   Radio,
-  Sparkles,
+  Landmark,
 } from "lucide-react";
 
 /* ----------------------------------------------------------
@@ -41,11 +41,20 @@ const groups = [
   },
 ];
 
-const crew = [
-  { name: "Priya Iyer",   role: "Analyst",  tone: "#F4B982" },
-  { name: "Rohan Mehta",  role: "Engineer", tone: "#E89459" },
-  { name: "Aisha Khan",   role: "Ops Lead", tone: "#FF8B5A" },
+type ActivityTone = "go" | "caution" | "alarm" | "info";
+const activity: { tone: ActivityTone; title: string; meta: string; when: string }[] = [
+  { tone: "go",      title: "Measurement logged",       meta: "NH-48 · km 234+100",  when: "just now" },
+  { tone: "alarm",   title: "Critical flagged",         meta: "NH-44 · km 80+200",   when: "2m ago" },
+  { tone: "info",    title: "Crew Alpha dispatched",    meta: "NH-66 · km 210+500",  when: "14m" },
+  { tone: "go",      title: "QR verified",              meta: "DME · km 48+600",     when: "1h" },
+  { tone: "caution", title: "RL drop · 12% / month",    meta: "NH-44 · km 550+300",  when: "2h" },
 ];
+const toneColor: Record<ActivityTone, string> = {
+  go:      "#5EC486",
+  caution: "#F3AD3C",
+  alarm:   "#FF7A6A",
+  info:    "#FFB58C",
+};
 
 /* ----------------------------------------------------------
    Sidebar (rounded dark rail · floats on peach gradient)
@@ -55,7 +64,7 @@ export default function Sidebar() {
 
   return (
     <aside
-      className="sticky top-3 self-start w-[248px] h-[calc(100vh-24px)] flex flex-col z-50 text-cream rounded-[22px] overflow-hidden"
+      className="sticky top-3 self-start w-[248px] h-[calc(100vh-24px)] flex flex-col z-[1200] text-cream rounded-[22px] overflow-hidden"
       style={{ background: "var(--color-ink)" }}
     >
       {/* Brand */}
@@ -117,45 +126,87 @@ export default function Sidebar() {
           </div>
         ))}
 
-        {/* Crew / interactions */}
+        {/* Recent activity feed */}
         <div className="mb-3">
-          <div className="px-2.5 mb-2 text-[9.5px] uppercase tracking-[0.22em] text-paper-2/35 font-medium">
-            Crew online
+          <div className="px-2.5 mb-2 flex items-center justify-between">
+            <span className="text-[9.5px] uppercase tracking-[0.22em] text-paper-2/35 font-medium">
+              Recent activity
+            </span>
+            <span
+              className="inline-block w-1.5 h-1.5 rounded-full animate-pulse-dot"
+              style={{ background: "var(--color-go-2, #5EC486)" }}
+            />
           </div>
-          <div className="space-y-1">
-            {crew.map((c) => (
-              <div key={c.name} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-[10px] hover:bg-paper-2/[0.04] cursor-pointer transition">
-                <div
-                  className="relative w-7 h-7 rounded-full flex items-center justify-center text-[10.5px] font-semibold text-ink"
-                  style={{ background: c.tone }}
-                >
-                  {c.name.split(" ").map((n) => n[0]).join("")}
-                  <span className="absolute -right-0.5 -bottom-0.5 w-2.5 h-2.5 rounded-full border-2 border-ink bg-go" />
-                </div>
+          <div className="space-y-0.5">
+            {activity.map((a, i) => (
+              <div
+                key={i}
+                className="group flex items-start gap-2.5 px-2.5 py-2 rounded-[10px] hover:bg-paper-2/[0.04] cursor-pointer transition"
+              >
+                <span
+                  className="mt-1.5 w-1.5 h-1.5 rounded-full shrink-0"
+                  style={{ background: toneColor[a.tone] }}
+                />
                 <div className="leading-tight min-w-0 flex-1">
-                  <div className="text-[12px] text-paper-2/90 font-medium truncate">{c.name}</div>
-                  <div className="text-[10px] text-paper-2/40 truncate">{c.role}</div>
+                  <div className="text-[11.5px] text-paper-2/85 font-medium truncate group-hover:text-paper-2">
+                    {a.title}
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[9.5px] text-paper-2/40 font-mono tabular mt-0.5">
+                    <span className="truncate">{a.meta}</span>
+                  </div>
                 </div>
+                <span className="text-[9px] text-paper-2/30 font-mono tabular shrink-0 mt-1">
+                  {a.when}
+                </span>
               </div>
             ))}
-            <button className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-[10px] text-[11.5px] text-paper-2/45 hover:text-paper-2 hover:bg-paper-2/[0.04] transition">
-              <ChevronsDown className="w-3.5 h-3.5" />
-              Show more <span className="text-paper-2/30">(6)</span>
+            <button className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-[10px] text-[10.5px] text-paper-2/45 hover:text-paper-2 hover:bg-paper-2/[0.04] transition font-mono tabular uppercase tracking-[0.12em]">
+              <ChevronsDown className="w-3 h-3" />
+              View all
             </button>
           </div>
         </div>
       </nav>
 
-      {/* Upgrade CTA — orange pill like Momentum */}
+      {/* Government branding — Ministry of Road Transport & Highways */}
       <div className="relative px-3 pb-3">
-        <button
-          className="relative w-full h-11 rounded-[14px] flex items-center gap-2 px-4 text-white font-medium text-[12.5px] overflow-hidden shadow-[0_8px_22px_-10px_rgba(255,107,53,0.75)] hover:brightness-110 transition"
-          style={{ background: "linear-gradient(135deg, #FF8B5A, #E85A26)" }}
+        <div
+          className="relative rounded-[14px] p-3 border border-white/[0.06] overflow-hidden"
+          style={{ background: "rgba(255,255,255,0.02)" }}
         >
-          <Sparkles className="w-4 h-4 shrink-0" strokeWidth={2} />
-          Upgrade to PRO
-          <span className="ml-auto text-[10.5px] font-mono tabular text-white/75">₹4.9k/mo</span>
-        </button>
+          {/* Tri-colour accent stripe */}
+          <div
+            aria-hidden
+            className="absolute top-0 left-0 right-0 h-[2px] flex"
+          >
+            <div className="flex-1" style={{ background: "#FF9933" }} />
+            <div className="flex-1" style={{ background: "rgba(255,255,255,0.75)" }} />
+            <div className="flex-1" style={{ background: "#138808" }} />
+          </div>
+
+          <div className="flex items-start gap-2.5 pt-1">
+            <div
+              className="w-8 h-8 rounded-[9px] flex items-center justify-center shrink-0"
+              style={{ background: "rgba(255,255,255,0.06)" }}
+            >
+              <Landmark
+                className="w-[15px] h-[15px] text-paper-2/75"
+                strokeWidth={1.8}
+              />
+            </div>
+            <div className="leading-tight min-w-0">
+              <div className="text-[9.5px] uppercase tracking-[0.16em] text-paper-2/45 font-medium">
+                Government of India
+              </div>
+              <div className="text-[11.5px] text-paper-2/90 font-semibold leading-tight mt-0.5">
+                NHAI · MoRTH
+              </div>
+              <div className="text-[9px] text-paper-2/35 mt-0.5 leading-snug">
+                Ministry of Road Transport &amp; Highways
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </aside>
   );

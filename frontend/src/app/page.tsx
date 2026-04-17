@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -12,9 +13,13 @@ import {
   OctagonAlert,
   TriangleAlert,
   Info,
+  Smartphone,
+  Truck,
+  FileDown,
+  CalendarPlus,
 } from "lucide-react";
-import { sampleAlerts } from "../data/sampleData";
 import TopBar from "../components/TopBar";
+import { api, useApi, type UiAlert } from "../lib/api";
 
 /* =========================================================
    Sparkline — responsive SVG (scales to container)
@@ -279,9 +284,14 @@ function HeroVisual() {
             <Play className="w-2.5 h-2.5 fill-ink" strokeWidth={0} />
             Watch tour
           </button>
-          <button className="flex items-center gap-1 h-8 px-3 rounded-full text-[11.5px] text-paper-2/70 hover:text-paper-2 border border-paper-2/10 hover:border-paper-2/25 transition">
+          <a
+            href="/retroguard-paper.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 h-8 px-3 rounded-full text-[11.5px] text-paper-2/70 hover:text-paper-2 border border-paper-2/10 hover:border-paper-2/25 transition"
+          >
             Read paper <ArrowUpRight className="w-3 h-3" />
-          </button>
+          </a>
         </div>
       </div>
 
@@ -749,7 +759,11 @@ function UpdatesCard() {
    Live alerts feed — warm icon badges, theme-harmonious
    ========================================================= */
 function AlertsFeed() {
-  const items = sampleAlerts.slice(0, 4);
+  const { data: alerts, loading, error } = useApi(
+    () => api.listAlerts({ is_resolved: false, limit: 8 }),
+    []
+  );
+  const items: UiAlert[] = (alerts ?? []).slice(0, 4);
 
   /* Warm, theme-aligned severity palette — all in the orange/amber family */
   const severityStyle = (sev: string) => {
@@ -813,7 +827,30 @@ function AlertsFeed() {
       </div>
 
       <div className="space-y-1.5">
-        {items.map((a, i) => {
+        {loading && (
+          <>
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center gap-3.5 px-3 py-2.5 -mx-2 animate-pulse">
+                <div className="w-10 h-10 rounded-[11px] bg-ink/[0.05] shrink-0" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-2 bg-ink/[0.05] rounded-full w-1/3" />
+                  <div className="h-2.5 bg-ink/[0.05] rounded-full w-3/4" />
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+        {error && !loading && (
+          <div className="text-[12px] text-alarm/85 px-3 py-4 rounded-[12px] bg-alarm/[0.05]">
+            Failed to load alerts · {error.message}
+          </div>
+        )}
+        {!loading && !error && items.length === 0 && (
+          <div className="text-[12.5px] text-ink/50 px-3 py-6 text-center">
+            Queue is clear — no active alerts.
+          </div>
+        )}
+        {!loading && items.map((a, i) => {
           const s = severityStyle(a.severity);
           const Icon = s.Icon;
           return (
@@ -883,10 +920,7 @@ export default function DashboardPage() {
             </h1>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <button className="pill bg-paper/60 border border-ink/5 hover:bg-paper text-ink/70 gap-2">
-              <MoreHorizontal className="w-3.5 h-3.5" />
-              Quick actions
-            </button>
+            <QuickActionsMenu />
             <button
               className="pill text-white font-medium gap-2 shadow-[0_10px_24px_-10px_rgba(255,107,53,0.7)] hover:brightness-110"
               style={{ background: "linear-gradient(135deg, #FF8B5A, #E85A26)" }}
@@ -968,6 +1002,110 @@ export default function DashboardPage() {
         <span>retroguard v0.9 · 6th nhai innovation hackathon</span>
         <span>sync · 14:32 IST · 205 nodes · uplink healthy</span>
       </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   Quick actions dropdown
+   ========================================================= */
+
+function QuickActionsMenu() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [open]);
+
+  const actions = [
+    {
+      icon: Smartphone,
+      label: "New measurement",
+      sub: "Launch field-capture tool",
+      href: "/measure",
+    },
+    {
+      icon: Truck,
+      label: "Dispatch crew",
+      sub: "Assign to critical asset",
+      href: "/alerts",
+    },
+    {
+      icon: CalendarPlus,
+      label: "Schedule inspection",
+      sub: "Add a corridor sweep",
+      href: "#",
+    },
+    {
+      icon: FileDown,
+      label: "Export compliance report",
+      sub: "IRC 67 / IRC 35 · PDF",
+      href: "/reports",
+    },
+  ];
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className="pill bg-paper/60 border border-ink/5 hover:bg-paper text-ink/70 gap-2"
+      >
+        <MoreHorizontal className="w-3.5 h-3.5" />
+        Quick actions
+        <ChevronRight
+          className={`w-3 h-3 rotate-90 opacity-60 transition ${
+            open ? "rotate-[270deg]" : ""
+          }`}
+        />
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute top-[calc(100%+8px)] right-0 z-[2100] min-w-[280px] rounded-[16px] bg-paper shadow-[0_22px_44px_-14px_rgba(28,27,25,0.22)] border border-ink/[0.06] p-1.5 animate-fade-in-up"
+          style={{ animationDuration: "160ms" }}
+        >
+          <div className="px-3 pt-1.5 pb-2 text-[9.5px] uppercase tracking-[0.22em] text-ink/45 font-medium">
+            Quick actions
+          </div>
+          {actions.map((a, i) => {
+            const Icon = a.icon;
+            return (
+              <a
+                key={i}
+                href={a.href}
+                onClick={() => setOpen(false)}
+                className="flex items-start gap-3 p-2.5 rounded-[11px] hover:bg-ink/[0.04] transition group"
+              >
+                <div
+                  className="w-9 h-9 rounded-[10px] flex items-center justify-center shrink-0 text-orange-deep"
+                  style={{ background: "rgba(255,107,53,0.08)" }}
+                >
+                  <Icon className="w-[15px] h-[15px]" strokeWidth={1.9} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[12.5px] font-medium text-ink leading-tight">
+                    {a.label}
+                  </div>
+                  <div className="text-[10.5px] text-ink/50 mt-0.5">
+                    {a.sub}
+                  </div>
+                </div>
+                <ArrowUpRight className="w-3.5 h-3.5 text-ink/30 group-hover:text-ink mt-2 transition" />
+              </a>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
