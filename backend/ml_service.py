@@ -14,10 +14,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-# Make ml/ importable from backend/
 _ML_DIR = Path(__file__).resolve().parent.parent / "ml"
-if str(_ML_DIR) not in sys.path:
-    sys.path.insert(0, str(_ML_DIR))
 
 try:
     import numpy as np
@@ -29,28 +26,64 @@ try:
 except ImportError:
     cv2 = None
 
-# Lazy imports — tolerate missing deps
-try:
-    from scripts.estimate_rl import (
-        extract_brightness,
-        estimate_rl as _estimate_rl_fn,
-        classify_condition,
-    )
-    _HAS_ESTIMATE = True
-except Exception:
-    _HAS_ESTIMATE = False
+# ML script imports are LAZY — ml/ contains a `models/` package that would
+# shadow backend/models.py. We only add ml/ to sys.path inside the wrapper
+# functions, use the imports, then clean up.
+extract_brightness = None
+_estimate_rl_fn = None
+classify_condition = None
+detect_retroreflective_assets = None
+_simulate_detections = None
+_predict_fn = None
+_HAS_ESTIMATE = False
+_HAS_DETECT = False
+_HAS_PREDICT = False
 
-try:
-    from scripts.detect_signs import detect_retroreflective_assets, _simulate_detections
-    _HAS_DETECT = True
-except Exception:
-    _HAS_DETECT = False
 
-try:
-    from scripts.predict_degradation import predict_failure_date as _predict_fn
-    _HAS_PREDICT = True
-except Exception:
-    _HAS_PREDICT = False
+def _load_ml_imports() -> None:
+    """Lazily import ml/scripts/* — done once, isolated from main sys.path."""
+    global extract_brightness, _estimate_rl_fn, classify_condition
+    global detect_retroreflective_assets, _simulate_detections, _predict_fn
+    global _HAS_ESTIMATE, _HAS_DETECT, _HAS_PREDICT
+    if _HAS_ESTIMATE or _HAS_DETECT or _HAS_PREDICT:
+        return
+
+    added = False
+    if str(_ML_DIR) not in sys.path:
+        sys.path.insert(0, str(_ML_DIR))
+        added = True
+    try:
+        try:
+            from scripts.estimate_rl import (
+                extract_brightness as _eb,
+                estimate_rl as _er,
+                classify_condition as _cc,
+            )
+            extract_brightness, _estimate_rl_fn, classify_condition = _eb, _er, _cc
+            _HAS_ESTIMATE = True
+        except Exception:
+            _HAS_ESTIMATE = False
+        try:
+            from scripts.detect_signs import (
+                detect_retroreflective_assets as _dr,
+                _simulate_detections as _sd,
+            )
+            detect_retroreflective_assets, _simulate_detections = _dr, _sd
+            _HAS_DETECT = True
+        except Exception:
+            _HAS_DETECT = False
+        try:
+            from scripts.predict_degradation import predict_failure_date as _pf
+            _predict_fn = _pf
+            _HAS_PREDICT = True
+        except Exception:
+            _HAS_PREDICT = False
+    finally:
+        if added:
+            try:
+                sys.path.remove(str(_ML_DIR))
+            except ValueError:
+                pass
 
 
 # ── Retroreflectivity estimation ────────────────────────────────────────────
@@ -66,6 +99,7 @@ def estimate_rl_from_image(
     Load an image from disk and compute an R_L estimate + classification.
     Falls back to deterministic simulation if cv2 is unavailable or load fails.
     """
+    _load_ml_imports()
     brightness: Optional[float] = None
 
     if _HAS_ESTIMATE and cv2 is not None and np is not None:
@@ -138,6 +172,7 @@ def detect_signs_in_image(
     height: int = 720,
 ) -> List[Dict[str, Any]]:
     """Return a list of detections. Uses YOLO when available, else simulation."""
+    _load_ml_imports()
     raw: List[Dict[str, Any]] = []
     if _HAS_DETECT and image_path and cv2 is not None:
         try:
@@ -181,6 +216,7 @@ def predict_degradation(
       - summary: failure date, days_to_failure, CI
       - series:  list of {day, date, rl, is_forecast} spanning history + horizon
     """
+    _load_ml_imports()
     if not measurements:
         raise ValueError("No measurements provided")
 
