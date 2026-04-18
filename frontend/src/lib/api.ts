@@ -419,6 +419,43 @@ export const api = {
   recentMeasurements: () =>
     fetchJson<ApiMeasurement[]>(`/api/measurements/recent`),
 
+  // Asset onboarding
+  async createAsset(payload: {
+    asset_type: string;
+    highway_id: string;
+    chainage_km: number;
+    gps_lat: number;
+    gps_lon: number;
+    irc_minimum_rl: number;
+    material_grade?: string | null;
+    installation_date?: string | null;
+    orientation?: string | null;
+  }): Promise<ApiAsset> {
+    return fetchJson<ApiAsset>(`/api/assets`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  async importAssetsCsv(file: File): Promise<{
+    created: number;
+    skipped: number;
+    errors: { row: number; reason: string }[];
+  }> {
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch(`${API_BASE}/api/assets/import`, {
+      method: "POST",
+      body: fd,
+    });
+    if (!res.ok) {
+      let detail: string | undefined;
+      try { detail = (await res.json()).detail; } catch { /* ignore */ }
+      throw new ApiError(`import → ${res.status}${detail ? ` · ${detail}` : ""}`, res.status);
+    }
+    return res.json();
+  },
+  assetImportTemplateUrl: () => `${API_BASE}/api/assets/import/template`,
+
   // Uploads — POST multipart image, receive stored public path
   async uploadImage(file: File | Blob, filename?: string): Promise<UploadResult> {
     const form = new FormData();

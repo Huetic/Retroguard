@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import {
   Search,
   SlidersHorizontal,
@@ -12,6 +12,9 @@ import {
   TrendingDown,
   Minus,
   Database,
+  Upload,
+  X,
+  FileSpreadsheet,
 } from "lucide-react";
 import TopBar from "../../components/TopBar";
 import { api, useApi, type UiAsset } from "../../lib/api";
@@ -72,6 +75,29 @@ export default function AssetsPage() {
     setStatusFilter("All");
     setTypeFilter("All");
   };
+
+  // Modal state
+  const [showAdd, setShowAdd] = useState(false);
+  const [showImport, setShowImport] = useState(false);
+  const { refetch } = useApi<UiAsset[]>(() => api.listAssets(), []);
+
+  // Export currently-filtered rows as CSV
+  const handleExport = () => {
+    const headers = ["asset_id", "type", "highway", "chainage", "current_rl", "irc_min", "status", "last_measured"];
+    const rows = filtered.map((a) => [
+      a.id, a.type, a.highway, a.chainage, a.currentRL, a.ircMin, a.status, a.lastMeasured,
+    ]);
+    const csv = [headers, ...rows].map((r) =>
+      r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")
+    ).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `assets_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
   const filtersActive =
     search !== "" ||
     hwFilter !== "All" ||
@@ -113,11 +139,22 @@ export default function AssetsPage() {
             <StatusPill count={counts.warning} label="Warning" tone="caution" />
             <StatusPill count={counts.critical} label="Critical" tone="alarm" />
             <div className="w-px h-7 bg-ink/10 mx-1" />
-            <button className="pill bg-paper/60 border border-ink/5 hover:bg-paper text-ink/75 gap-2">
+            <button
+              onClick={() => setShowImport(true)}
+              className="pill bg-paper/60 border border-ink/5 hover:bg-paper text-ink/75 gap-2"
+            >
+              <Upload className="w-3.5 h-3.5" strokeWidth={1.8} />
+              Import
+            </button>
+            <button
+              onClick={handleExport}
+              className="pill bg-paper/60 border border-ink/5 hover:bg-paper text-ink/75 gap-2"
+            >
               <Download className="w-3.5 h-3.5" strokeWidth={1.8} />
               Export
             </button>
             <button
+              onClick={() => setShowAdd(true)}
               className="pill text-white font-medium gap-2 shadow-[0_10px_24px_-10px_rgba(255,107,53,0.7)] hover:brightness-110"
               style={{ background: "linear-gradient(135deg, #FF8B5A, #E85A26)" }}
             >
@@ -391,6 +428,304 @@ export default function AssetsPage() {
         <span>retroguard · asset registry</span>
         <span>last sync · 14:32 IST · {counts.total} nodes</span>
       </div>
+
+      {showAdd && (
+        <AddAssetModal
+          onClose={() => setShowAdd(false)}
+          onCreated={() => {
+            setShowAdd(false);
+            refetch();
+          }}
+        />
+      )}
+      {showImport && (
+        <ImportCsvModal
+          onClose={() => setShowImport(false)}
+          onImported={() => {
+            setShowImport(false);
+            refetch();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ==========================================================
+   Add asset modal
+   ========================================================== */
+function AddAssetModal({
+  onClose,
+  onCreated,
+}: {
+  onClose: () => void;
+  onCreated: () => void;
+}) {
+  const [form, setForm] = useState({
+    asset_type: "sign",
+    highway_id: "NH-48",
+    chainage_km: "",
+    gps_lat: "",
+    gps_lon: "",
+    irc_minimum_rl: "250",
+    material_grade: "",
+    installation_date: "",
+    orientation: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const update = (k: keyof typeof form) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+      setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  const submit = async () => {
+    setErr(null);
+    setSubmitting(true);
+    try {
+      await api.createAsset({
+        asset_type: form.asset_type,
+        highway_id: form.highway_id,
+        chainage_km: parseFloat(form.chainage_km),
+        gps_lat: parseFloat(form.gps_lat),
+        gps_lon: parseFloat(form.gps_lon),
+        irc_minimum_rl: parseFloat(form.irc_minimum_rl),
+        material_grade: form.material_grade || null,
+        installation_date: form.installation_date
+          ? new Date(form.installation_date).toISOString()
+          : null,
+        orientation: form.orientation || null,
+      });
+      onCreated();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <ModalShell title="Add asset" onClose={onClose}>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Asset type">
+          <select
+            className="w-full bg-paper/60 border border-ink/10 rounded-lg h-9 px-2 text-[13px]"
+            value={form.asset_type}
+            onChange={update("asset_type")}
+          >
+            <option value="sign">Sign</option>
+            <option value="marking">Marking</option>
+            <option value="rpm">RPM</option>
+            <option value="delineator">Delineator</option>
+          </select>
+        </Field>
+        <Field label="Highway ID">
+          <input className={inputCls} value={form.highway_id} onChange={update("highway_id")} />
+        </Field>
+        <Field label="Chainage (km)">
+          <input className={inputCls} value={form.chainage_km} onChange={update("chainage_km")} placeholder="234.5" />
+        </Field>
+        <Field label="IRC minimum R_L">
+          <input className={inputCls} value={form.irc_minimum_rl} onChange={update("irc_minimum_rl")} />
+        </Field>
+        <Field label="GPS lat">
+          <input className={inputCls} value={form.gps_lat} onChange={update("gps_lat")} placeholder="21.1700" />
+        </Field>
+        <Field label="GPS lon">
+          <input className={inputCls} value={form.gps_lon} onChange={update("gps_lon")} placeholder="72.8311" />
+        </Field>
+        <Field label="Material grade">
+          <input className={inputCls} value={form.material_grade} onChange={update("material_grade")} placeholder="high_intensity" />
+        </Field>
+        <Field label="Installation date">
+          <input type="date" className={inputCls} value={form.installation_date} onChange={update("installation_date")} />
+        </Field>
+        <Field label="Orientation">
+          <input className={inputCls} value={form.orientation} onChange={update("orientation")} placeholder="left / right / overhead" />
+        </Field>
+      </div>
+      {err && <div className="mt-3 text-[12px] text-alarm">{err}</div>}
+      <div className="mt-5 flex items-center justify-end gap-2">
+        <button onClick={onClose} className="pill bg-paper/60 border border-ink/5 hover:bg-paper text-ink/75">
+          Cancel
+        </button>
+        <button
+          disabled={submitting}
+          onClick={submit}
+          className="pill text-white font-medium shadow-[0_10px_24px_-10px_rgba(255,107,53,0.7)] disabled:opacity-50"
+          style={{ background: "linear-gradient(135deg, #FF8B5A, #E85A26)" }}
+        >
+          {submitting ? "Creating…" : "Create asset"}
+        </button>
+      </div>
+    </ModalShell>
+  );
+}
+
+/* ==========================================================
+   Import CSV modal
+   ========================================================== */
+function ImportCsvModal({
+  onClose,
+  onImported,
+}: {
+  onClose: () => void;
+  onImported: () => void;
+}) {
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [result, setResult] = useState<{
+    created: number;
+    skipped: number;
+    errors: { row: number; reason: string }[];
+  } | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const submit = async () => {
+    if (!file) return;
+    setErr(null);
+    setSubmitting(true);
+    try {
+      const res = await api.importAssetsCsv(file);
+      setResult(res);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <ModalShell title="Import assets from CSV" onClose={onClose}>
+      {!result ? (
+        <>
+          <p className="text-[12.5px] text-ink/65 mb-3">
+            Upload a CSV with one row per asset. Invalid rows are skipped, not blocking.
+          </p>
+          <a
+            href={api.assetImportTemplateUrl()}
+            className="inline-flex items-center gap-1.5 text-[12px] text-orange hover:underline mb-4"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5" />
+            Download CSV template
+          </a>
+          <div
+            onClick={() => fileInput.current?.click()}
+            className="border border-dashed border-ink/20 rounded-xl p-6 cursor-pointer hover:bg-paper/40 text-center"
+          >
+            <Upload className="w-5 h-5 text-ink/50 mx-auto mb-2" />
+            <div className="text-[13px] text-ink/70">
+              {file ? file.name : "Click to choose a .csv file"}
+            </div>
+          </div>
+          <input
+            ref={fileInput}
+            type="file"
+            accept=".csv"
+            hidden
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+          />
+          {err && <div className="mt-3 text-[12px] text-alarm">{err}</div>}
+          <div className="mt-5 flex items-center justify-end gap-2">
+            <button onClick={onClose} className="pill bg-paper/60 border border-ink/5 hover:bg-paper text-ink/75">
+              Cancel
+            </button>
+            <button
+              onClick={submit}
+              disabled={!file || submitting}
+              className="pill text-white font-medium shadow-[0_10px_24px_-10px_rgba(255,107,53,0.7)] disabled:opacity-50"
+              style={{ background: "linear-gradient(135deg, #FF8B5A, #E85A26)" }}
+            >
+              {submitting ? "Uploading…" : "Upload"}
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="flex items-center gap-4 mb-4">
+            <StatBlock label="Created" value={result.created} tone="go" />
+            <StatBlock label="Skipped" value={result.skipped} tone="caution" />
+          </div>
+          {result.errors.length > 0 && (
+            <>
+              <div className="text-[12px] text-ink/70 mb-2 font-medium">Row errors</div>
+              <div className="max-h-[200px] overflow-y-auto border border-ink/10 rounded-lg divide-y divide-ink/5">
+                {result.errors.map((e) => (
+                  <div key={e.row} className="px-3 py-2 text-[12px]">
+                    <span className="font-mono text-ink/60">row {e.row}</span>
+                    <span className="text-ink/80 ml-2">{e.reason}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+          <div className="mt-5 flex items-center justify-end">
+            <button
+              onClick={onImported}
+              className="pill text-white font-medium shadow-[0_10px_24px_-10px_rgba(255,107,53,0.7)]"
+              style={{ background: "linear-gradient(135deg, #FF8B5A, #E85A26)" }}
+            >
+              Done
+            </button>
+          </div>
+        </>
+      )}
+    </ModalShell>
+  );
+}
+
+/* ==========================================================
+   Modal shell + small helpers
+   ========================================================== */
+const inputCls =
+  "w-full bg-paper/60 border border-ink/10 rounded-lg h-9 px-2 text-[13px] focus:outline-none focus:border-orange/60";
+
+function ModalShell({
+  title,
+  onClose,
+  children,
+}: {
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-[3000] flex items-center justify-center bg-ink/60 backdrop-blur-sm p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-paper rounded-2xl shadow-2xl w-full max-w-[560px] max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="px-5 py-4 border-b border-ink/5 flex items-center justify-between">
+          <div className="text-[15px] font-semibold text-ink">{title}</div>
+          <button onClick={onClose} className="w-8 h-8 rounded-full hover:bg-ink/5 flex items-center justify-center text-ink/60">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        <div className="px-5 py-4">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="flex flex-col gap-1">
+      <span className="text-[10.5px] uppercase tracking-[0.14em] text-ink/55 font-medium">{label}</span>
+      {children}
+    </label>
+  );
+}
+
+function StatBlock({ label, value, tone }: { label: string; value: number; tone: "go" | "caution" }) {
+  const color = tone === "go" ? "#5EC486" : "#F3AD3C";
+  return (
+    <div className="flex-1 rounded-xl bg-paper/60 border border-ink/5 p-3">
+      <div className="text-[11px] text-ink/55 uppercase tracking-[0.14em]">{label}</div>
+      <div className="text-[28px] font-semibold" style={{ color }}>{value}</div>
     </div>
   );
 }
