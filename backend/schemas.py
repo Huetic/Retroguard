@@ -225,6 +225,68 @@ class PredictionResponse(BaseModel):
 
 # ── Ingestion jobs ──────────────────────────────────────────────────────────
 
+# ── Reference patches (Layer 3) ─────────────────────────────────────────────
+
+class ReferencePatchBase(BaseModel):
+    label: str
+    known_rl: float = Field(gt=0)
+    color: str = "white"
+    material_grade: Optional[str] = None
+    deployed_at_lat: Optional[float] = None
+    deployed_at_lon: Optional[float] = None
+    highway_id: Optional[str] = None
+    chainage_km: Optional[float] = None
+    installation_date: Optional[datetime] = None
+    certification_ref: Optional[str] = None
+    notes: Optional[str] = None
+    active: bool = True
+
+
+class ReferencePatchCreate(ReferencePatchBase):
+    pass
+
+
+class ReferencePatchUpdate(BaseModel):
+    label: Optional[str] = None
+    known_rl: Optional[float] = Field(default=None, gt=0)
+    color: Optional[str] = None
+    material_grade: Optional[str] = None
+    deployed_at_lat: Optional[float] = None
+    deployed_at_lon: Optional[float] = None
+    highway_id: Optional[str] = None
+    chainage_km: Optional[float] = None
+    installation_date: Optional[datetime] = None
+    certification_ref: Optional[str] = None
+    notes: Optional[str] = None
+    active: Optional[bool] = None
+
+
+class ReferencePatchResponse(ReferencePatchBase):
+    id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class CalibratedRLRequest(BaseModel):
+    sign_brightness: float = Field(ge=0, le=255)
+    patch_brightness: float = Field(gt=0, le=255)
+    patch_id: int
+    distance: Optional[float] = 30.0
+    angle: Optional[float] = 0.2
+
+
+class CalibratedRLResponse(BaseModel):
+    rl_value: float
+    calibration_factor: float
+    patch_id: int
+    patch_known_rl: float
+    patch_brightness: float
+    sign_brightness: float
+    classification: Optional[dict] = None
+
+
 class JobRunResponse(BaseModel):
     id: int
     source_type: str

@@ -59,21 +59,46 @@ Branch: `feat/complete-backend` → PR #1
 - Audit log
 - Shapefile / GeoJSON export (the `/api/assets/map` GeoJSON feed exists but isn't surfaced as a download)
 
-## 5. Layer 2 — CCTV / dashcam bulk ingestion (NOT TESTED)
+## 5. Layer 2 — CCTV / dashcam async ingestion (backend done; UI built; real video untested)
 
 | Change | Tested? | Result |
 |---|---|---|
-| `POST /api/ml/ingest-video` — samples frames, bulk-inserts measurements, updates status from mean R_L | Partially — only a synthetic 5-second cv2-generated video | Curl call returned 200 with 10 measurements created, but **real CCTV / dashcam footage has not been tested** |
-| `sample_video_frames()` in `ml_service.py` (cv2-based) | Synthetic only | Untested against real video |
-| `estimate_rl_from_frame()` | Synthetic only | Untested against real video |
-| Frontend UI to upload video | Not built | N/A |
+| Synchronous `POST /api/ml/ingest-video` v1 | Synthetic cv2 video | Pass (deprecated in favor of async below) |
+| `JobRun` model — tracks every ingestion (source, status, params, result, timings, error) | Yes (boot + curl) | Pass |
+| `POST /api/ingest/video` — returns 202 + job_id immediately; work runs in BackgroundTask | Yes (curl) | Pass (queued → running → done in ~1s, 8 measurements persisted) |
+| `GET /api/ingest/jobs` and `/jobs/{id}` polling endpoints | Yes (curl) | Pass |
+| Frontend `/ingest` page — upload form + live jobs list polling every 3s | Built | Renders; not yet exercised by user with a real video |
+| Sidebar: "Video ingest" nav item under Operations | Built | Visible |
+
+**Architectural notes:**
+- `JobRun` table is the stable contract — swapping `BackgroundTasks` for Celery/RQ/pg-boss later requires zero API changes.
+- The legacy `/api/ml/ingest-video` sync endpoint remains for scripts/CI; new UI uses the async path.
 
 **Outstanding work on Layer 2:**
 1. Test with a real `.mp4` of a highway recording.
-2. Build an "Ingest video" UI (either on `/measure` or a new page) that hits `/api/ml/ingest-video`.
-3. Consider: asset selection by GPS proximity (frame timestamp → chainage) so one video can populate measurements across multiple assets instead of just one.
+2. Asset selection by GPS proximity (frame timestamp → chainage) so one video can populate measurements across multiple assets instead of just one.
+3. Upgrade from in-process `BackgroundTasks` to a proper queue when ingestion volume grows.
 
-## 6. Summary of what's safe to demo
+## 6. Layer 3 — Reference patch calibration (backend + UI done)
+
+| Change | Tested? | Result |
+|---|---|---|
+| `ReferencePatch` model — label, known_rl, color, GPS/highway/chainage, cert ref, active flag | Yes (boot + curl) | Pass |
+| `/api/patches` CRUD: list / create / get / update / delete | Yes (curl) | Pass |
+| `POST /api/patches/calibrated-rl` — takes sign_brightness + patch_brightness + patch_id → returns absolute R_L via `known_rl / patch_brightness × sign_brightness` | Yes (curl) | Pass (500/200 × 120 = 300 R_L, classified compliant) |
+| Frontend `/patches` page — CRUD table + Calibrated R_L calculator modal | Built | Renders; math round-trip verified via backend test |
+| Sidebar: "Ref. patches" nav item under Data | Built | Visible |
+
+**Architectural notes:**
+- The existing uncalibrated `estimate_rl` endpoint stays for back-compat (useful when no patch is in view).
+- The calibrated endpoint is the physics-anchored default going forward — UI flows should route through it when a patch is available.
+
+**Outstanding work on Layer 3:**
+1. Thread calibration into the upload / capture pipelines (`/api/ml/upload-measurement` should accept an optional `patch_id` + `patch_brightness`).
+2. Auto-detect patches in images (vision task) — currently the operator supplies brightness manually.
+3. Seasonal patch recertification reminder (patches themselves degrade over years).
+
+## 7. Summary of what's safe to demo
 
 - Dashboard overview with real counts (`/`)
 - Asset registry with Import / Add / Export / Refresh (`/assets`)
@@ -82,7 +107,7 @@ Branch: `feat/complete-backend` → PR #1
 - PDF/Excel report downloads
 - QR code generation for individual assets
 
-## 7. What to flag as "not demo-ready"
+## 8. What to flag as "not demo-ready"
 
 - Layer 2 video ingestion (untested on real footage, no UI)
 - "Hi, Madhav" greeting, calendar, workload heatmap on `/` (still placeholder)

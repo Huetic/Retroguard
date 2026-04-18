@@ -13,12 +13,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from database import engine, SessionLocal, Base
-from models import HighwayAsset, Measurement, Alert, MaintenanceOrder, JobRun  # noqa: F401 — ensure tables registered
+from models import HighwayAsset, Measurement, Alert, MaintenanceOrder, JobRun, ReferencePatch  # noqa: F401 — ensure tables registered
 from seed_data import seed
 
 from routers import (
     assets, measurements, alerts, dashboard, reports,
-    ml, maintenance, qr, uploads, ingest,
+    ml, maintenance, qr, uploads, ingest, patches,
 )
 
 UPLOAD_DIR = Path(__file__).resolve().parent / "uploads"
@@ -70,6 +70,7 @@ app.include_router(maintenance.router)
 app.include_router(qr.router)
 app.include_router(uploads.router)
 app.include_router(ingest.router)
+app.include_router(patches.router)
 
 
 @app.get("/")

@@ -14,6 +14,7 @@ import {
   Radio,
   Landmark,
   Film,
+  Target,
 } from "lucide-react";
 import { api, type ApiMeasurement } from "../lib/api";
 
@@ -34,6 +35,7 @@ function buildGroups(assetCount: number | null, alertCount: number | null) {
       items: [
         { href: "/assets", label: "Asset registry", icon: Boxes,
           badge: assetCount !== null ? String(assetCount) : "—" },
+        { href: "/patches", label: "Ref. patches", icon: Target },
         { href: "/alerts", label: "Live alerts",    icon: BellRing,
           badge: alertCount !== null ? String(alertCount) : "—",
           badgeColor: "alarm" as const },

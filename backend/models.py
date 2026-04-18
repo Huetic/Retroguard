@@ -76,6 +76,30 @@ class MaintenanceOrder(Base):
     asset = relationship("HighwayAsset", back_populates="maintenance_orders")
 
 
+class ReferencePatch(Base):
+    """
+    Layer 3: a physical retroreflective patch with a lab-certified R_L value.
+    Placed in the camera's view during measurement so the software can
+    compute an absolute calibration factor from its observed brightness.
+    """
+    __tablename__ = "reference_patches"
+
+    id = Column(Integer, primary_key=True, index=True)
+    label = Column(String(100), nullable=False)            # e.g. "DME toll plaza #2 · patch A"
+    known_rl = Column(Float, nullable=False)               # mcd/lx/m^2, lab-certified
+    color = Column(String(30), nullable=False, default="white")  # white / yellow / orange
+    material_grade = Column(String(50), nullable=True)
+    deployed_at_lat = Column(Float, nullable=True)
+    deployed_at_lon = Column(Float, nullable=True)
+    highway_id = Column(String(50), nullable=True, index=True)
+    chainage_km = Column(Float, nullable=True)
+    installation_date = Column(DateTime, nullable=True)
+    certification_ref = Column(String(200), nullable=True)  # lab cert number / pdf link
+    notes = Column(Text, nullable=True)
+    active = Column(Boolean, default=True, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 class JobRun(Base):
     """
     Tracks every background ingestion job (video uploads, bulk imports, etc.).

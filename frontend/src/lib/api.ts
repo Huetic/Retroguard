@@ -101,6 +101,23 @@ export interface ApiAlertSummary {
   total: number;
 }
 
+export interface ApiReferencePatch {
+  id: number;
+  label: string;
+  known_rl: number;
+  color: string;
+  material_grade: string | null;
+  deployed_at_lat: number | null;
+  deployed_at_lon: number | null;
+  highway_id: string | null;
+  chainage_km: number | null;
+  installation_date: string | null;
+  certification_ref: string | null;
+  notes: string | null;
+  active: boolean;
+  created_at: string;
+}
+
 export interface ApiJobRun {
   id: number;
   source_type: string;
@@ -515,6 +532,45 @@ export const api = {
     fetchJson<ApiJobRun[]>(`/api/ingest/jobs?limit=${limit}`),
   getJob: (id: number) =>
     fetchJson<ApiJobRun>(`/api/ingest/jobs/${id}`),
+
+  // Reference patches (Layer 3)
+  listPatches: (activeOnly = false) =>
+    fetchJson<ApiReferencePatch[]>(
+      `/api/patches${activeOnly ? "?active=true" : ""}`
+    ),
+  createPatch: (p: Omit<ApiReferencePatch, "id" | "created_at">) =>
+    fetchJson<ApiReferencePatch>(`/api/patches`, {
+      method: "POST",
+      body: JSON.stringify(p),
+    }),
+  updatePatch: (id: number, p: Partial<Omit<ApiReferencePatch, "id" | "created_at">>) =>
+    fetchJson<ApiReferencePatch>(`/api/patches/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(p),
+    }),
+  deletePatch: async (id: number) => {
+    const res = await fetch(`${API_BASE}/api/patches/${id}`, { method: "DELETE" });
+    if (!res.ok) throw new ApiError(`delete patch → ${res.status}`, res.status);
+  },
+  calibratedRL: (payload: {
+    sign_brightness: number;
+    patch_brightness: number;
+    patch_id: number;
+    distance?: number;
+    angle?: number;
+  }) =>
+    fetchJson<{
+      rl_value: number;
+      calibration_factor: number;
+      patch_id: number;
+      patch_known_rl: number;
+      patch_brightness: number;
+      sign_brightness: number;
+      classification: { status: string; rl_rounded: number } | null;
+    }>(`/api/patches/calibrated-rl`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
 
   // Uploads — POST multipart image, receive stored public path
   async uploadImage(file: File | Blob, filename?: string): Promise<UploadResult> {
