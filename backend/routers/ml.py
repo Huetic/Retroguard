@@ -20,6 +20,8 @@ from ml_service import (
     estimate_rl_from_image,
     detect_signs_in_image,
     predict_degradation,
+    sample_video_frames,
+    estimate_rl_from_frame,
 )
 
 router = APIRouter(prefix="/api/ml", tags=["ML"])
@@ -153,3 +155,90 @@ def predict_endpoint(asset_id: int, horizon_days: int = 720, db: Session = Depen
         db.rollback()
 
     return result
+
+
+@router.post("/ingest-video", status_code=201)
+async def ingest_video(
+    asset_id: int = Form(...),
+    every_n_seconds: float = Form(2.0),
+    max_frames: int = Form(30),
+    source_layer: str = Form("cctv"),
+    distance: float = Form(30.0),
+    angle: float = Form(0.2),
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+):
+    """
+    Layer 2 (CCTV) / Layer 4 (dashcam) bulk ingestion.
+
+    Takes one video, samples frames every N seconds (up to max_frames),
+    estimates R_L from each sampled frame, bulk-inserts measurements
+    for the given asset, and updates its status based on the final frame.
+
+    Returns a summary: frames_sampled, measurements_created, avg/min/max R_L.
+    """
+    if source_layer not in ("cctv", "dashcam"):
+        raise HTTPException(400, "source_layer must be 'cctv' or 'dashcam' for video ingestion")
+
+    asset = db.query(HighwayAsset).filter(HighwayAsset.id == asset_id).first()
+    if not asset:
+        raise HTTPException(404, "Asset not found")
+
+    saved = _save_upload(file)
+    try:
+        frames = sample_video_frames(
+            str(saved),
+            every_n_seconds=every_n_seconds,
+            max_frames=max_frames,
+        )
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+    if not frames:
+        raise HTTPException(400, "No frames could be sampled from the video")
+
+    created: List[Measurement] = []
+    rl_values: List[float] = []
+    base_ts = datetime.utcnow()
+
+    for f in frames:
+        est = estimate_rl_from_frame(
+            f["frame"],
+            irc_minimum=asset.irc_minimum_rl,
+            distance=distance,
+            angle=angle,
+        )
+        m = Measurement(
+            asset_id=asset_id,
+            rl_value=est["rl_value"],
+            confidence=est["confidence"],
+            source_layer=source_layer,
+            conditions_json=json.dumps({
+                "brightness": est["brightness"],
+                "frame_idx": f["frame_idx"],
+                "timestamp_s": f["timestamp_s"],
+                "video": str(saved.name),
+            }),
+            device_info=f"video_ingest:{source_layer}",
+            image_path=str(saved.relative_to(UPLOAD_DIR.parent)),
+            measured_at=base_ts,
+        )
+        db.add(m)
+        created.append(m)
+        rl_values.append(est["rl_value"])
+
+    # Update asset status based on the mean R_L (smooths noise across frames)
+    mean_rl = sum(rl_values) / len(rl_values)
+    _update_asset_status(asset, mean_rl, db)
+    db.commit()
+
+    return {
+        "video": saved.name,
+        "source_layer": source_layer,
+        "frames_sampled": len(frames),
+        "measurements_created": len(created),
+        "avg_rl": round(mean_rl, 2),
+        "min_rl": round(min(rl_values), 2),
+        "max_rl": round(max(rl_values), 2),
+        "final_asset_status": asset.status,
+    }

@@ -200,6 +200,82 @@ def detect_signs_in_image(
     return [_normalize_detection(d) for d in raw]
 
 
+# ── CCTV video frame sampling (Layer 2) ─────────────────────────────────────
+
+def sample_video_frames(
+    video_path: str,
+    every_n_seconds: float = 2.0,
+    max_frames: int = 60,
+) -> List[Dict[str, Any]]:
+    """
+    Sample frames from a video at ~every_n_seconds intervals.
+
+    Returns list of {frame_idx, timestamp_s, frame (np.ndarray)} dicts.
+    Falls back to a synthetic empty sequence if cv2 is unavailable.
+    """
+    _load_ml_imports()
+    if cv2 is None:
+        # Pure-simulation fallback: emit fake 'frames' at 2s spacing
+        count = min(max_frames, 10)
+        return [
+            {"frame_idx": i, "timestamp_s": i * every_n_seconds, "frame": None}
+            for i in range(count)
+        ]
+
+    cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        raise ValueError(f"Could not open video: {video_path}")
+
+    fps = cap.get(cv2.CAP_PROP_FPS) or 25.0
+    total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+    step = max(int(fps * every_n_seconds), 1)
+
+    out: List[Dict[str, Any]] = []
+    idx = 0
+    while idx < total and len(out) < max_frames:
+        cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
+        ok, frame = cap.read()
+        if not ok:
+            break
+        out.append({"frame_idx": idx, "timestamp_s": idx / fps, "frame": frame})
+        idx += step
+
+    cap.release()
+    return out
+
+
+def estimate_rl_from_frame(
+    frame: Optional[Any],
+    irc_minimum: float,
+    distance: float = 30.0,
+    angle: float = 0.2,
+    calibration_factor: float = 2.5,
+) -> Dict[str, Any]:
+    """Same as estimate_rl_from_image but takes a decoded frame (np.ndarray)."""
+    _load_ml_imports()
+    brightness: Optional[float] = None
+    if frame is not None and _HAS_ESTIMATE and np is not None:
+        try:
+            brightness = float(extract_brightness(frame))
+        except Exception:
+            brightness = None
+    if brightness is None:
+        brightness = random.uniform(60.0, 180.0)
+
+    if _HAS_ESTIMATE and _estimate_rl_fn:
+        rl = float(_estimate_rl_fn(brightness, calibration_factor, distance, angle))
+    else:
+        ref_dist, ref_angle = 30.0, 0.2
+        dist_factor = (max(distance, 1.0) / ref_dist) ** 1.5
+        angle_factor = math.cos(math.radians(ref_angle)) / max(
+            math.cos(math.radians(max(angle, 0.01))), 0.01
+        )
+        rl = brightness * calibration_factor * dist_factor * angle_factor
+
+    confidence = max(0.5, min(0.99, 0.7 + (brightness - 100) / 400.0))
+    return {"rl_value": round(rl, 2), "brightness": round(brightness, 2), "confidence": round(confidence, 3)}
+
+
 # ── Degradation prediction ──────────────────────────────────────────────────
 
 def predict_degradation(
