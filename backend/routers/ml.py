@@ -2,9 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from typing import Optional, List
 from datetime import datetime
-from pathlib import Path
 import json
-import uuid
 
 from database import get_db
 from models import HighwayAsset, Measurement
@@ -24,19 +22,9 @@ from ml_service import (
     estimate_rl_from_frame,
 )
 
+from storage import storage
+
 router = APIRouter(prefix="/api/ml", tags=["ML"])
-
-UPLOAD_DIR = Path(__file__).resolve().parent.parent / "uploads"
-UPLOAD_DIR.mkdir(exist_ok=True)
-
-
-def _save_upload(file: UploadFile) -> Path:
-    ext = Path(file.filename or "").suffix.lower() or ".bin"
-    name = f"{datetime.utcnow():%Y%m%d%H%M%S}_{uuid.uuid4().hex[:8]}{ext}"
-    dest = UPLOAD_DIR / name
-    with dest.open("wb") as f:
-        f.write(file.file.read())
-    return dest
 
 
 @router.post("/estimate-rl", response_model=RLEstimateResponse)
@@ -66,8 +54,8 @@ async def detect_signs_endpoint(file: Optional[UploadFile] = File(None)):
     """Run sign/marking detection. If a file is uploaded, runs on it; else simulates."""
     path: Optional[str] = None
     if file is not None:
-        saved = _save_upload(file)
-        path = str(saved)
+        stored_path = storage.save(file)
+        path = str(storage.absolute_path(stored_path))
     return detect_signs_in_image(image_path=path)
 
 
@@ -89,9 +77,9 @@ async def upload_measurement(
     if source_layer not in ("smartphone", "cctv", "dashcam", "qr_code"):
         raise HTTPException(400, "invalid source_layer")
 
-    saved = _save_upload(file)
+    stored_path = storage.save(file)
     result = estimate_rl_from_image(
-        str(saved),
+        str(storage.absolute_path(stored_path)),
         irc_minimum=asset.irc_minimum_rl,
         distance=distance,
         angle=angle,
@@ -106,7 +94,7 @@ async def upload_measurement(
             {"brightness": result["brightness"], "engine": result["engine"]}
         ),
         device_info=device_info,
-        image_path=str(saved.relative_to(UPLOAD_DIR.parent)),
+        image_path=stored_path,
         measured_at=datetime.utcnow(),
     )
     db.add(measurement)
@@ -184,10 +172,11 @@ async def ingest_video(
     if not asset:
         raise HTTPException(404, "Asset not found")
 
-    saved = _save_upload(file)
+    stored_path = storage.save(file)
+    abs_path = str(storage.absolute_path(stored_path))
     try:
         frames = sample_video_frames(
-            str(saved),
+            abs_path,
             every_n_seconds=every_n_seconds,
             max_frames=max_frames,
         )
@@ -217,10 +206,10 @@ async def ingest_video(
                 "brightness": est["brightness"],
                 "frame_idx": f["frame_idx"],
                 "timestamp_s": f["timestamp_s"],
-                "video": str(saved.name),
+                "video": storage.absolute_path(stored_path).name,
             }),
             device_info=f"video_ingest:{source_layer}",
-            image_path=str(saved.relative_to(UPLOAD_DIR.parent)),
+            image_path=stored_path,
             measured_at=base_ts,
         )
         db.add(m)
@@ -233,7 +222,7 @@ async def ingest_video(
     db.commit()
 
     return {
-        "video": saved.name,
+        "video": storage.absolute_path(stored_path).name,
         "source_layer": source_layer,
         "frames_sampled": len(frames),
         "measurements_created": len(created),

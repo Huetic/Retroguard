@@ -9,9 +9,7 @@ later with no API contract change — the jobs table is the stable contract.
 """
 
 import json
-import uuid
 from datetime import datetime
-from pathlib import Path
 from typing import List, Optional
 
 from fastapi import (
@@ -25,20 +23,9 @@ from models import HighwayAsset, JobRun, Measurement
 from schemas import JobRunResponse
 from routers.measurements import _update_asset_status
 from ml_service import estimate_rl_from_frame, sample_video_frames
+from storage import storage
 
 router = APIRouter(prefix="/api/ingest", tags=["Ingest"])
-
-UPLOAD_DIR = Path(__file__).resolve().parent.parent / "uploads"
-UPLOAD_DIR.mkdir(exist_ok=True)
-
-
-def _save_upload(file: UploadFile) -> Path:
-    ext = Path(file.filename or "").suffix.lower() or ".mp4"
-    name = f"{datetime.utcnow():%Y%m%d%H%M%S}_{uuid.uuid4().hex[:8]}{ext}"
-    dest = UPLOAD_DIR / name
-    with dest.open("wb") as f:
-        f.write(file.file.read())
-    return dest
 
 
 # ── Background worker ───────────────────────────────────────────────────────
@@ -76,9 +63,12 @@ def _process_video_job(
             db.commit()
             return
 
+        # video_path is a stored_path (e.g. "uploads/20260418_abc.mp4");
+        # cv2 needs an absolute filesystem path.
+        abs_video_path = str(storage.absolute_path(video_path))
         try:
             frames = sample_video_frames(
-                video_path,
+                abs_video_path,
                 every_n_seconds=every_n_seconds,
                 max_frames=max_frames,
             )
@@ -111,7 +101,7 @@ def _process_video_job(
                     "trust_level": trust_level,
                 }),
                 device_info=f"video_ingest:{source_layer}",
-                image_path=str(Path(video_path).name),
+                image_path=video_path,
                 measured_at=base_ts,
                 contributor_id=contributor_id,
             )
@@ -173,9 +163,9 @@ async def enqueue_video(
     if not asset:
         raise HTTPException(404, "Asset not found")
 
-    saved = _save_upload(file)
+    stored_path = storage.save(file)
     params = {
-        "video_path": str(saved),
+        "video_path": stored_path,
         "asset_id": asset_id,
         "source_layer": source_layer,
         "every_n_seconds": every_n_seconds,
@@ -197,7 +187,7 @@ async def enqueue_video(
     background_tasks.add_task(
         _process_video_job,
         job_id=job.id,
-        video_path=str(saved),
+        video_path=stored_path,
         asset_id=asset_id,
         source_layer=source_layer,
         every_n_seconds=every_n_seconds,
@@ -262,9 +252,9 @@ async def contribute_video(
     if not asset:
         raise HTTPException(404, "Asset not found")
 
-    saved = _save_upload(file)
+    stored_path = storage.save(file)
     params = {
-        "video_path": str(saved),
+        "video_path": stored_path,
         "asset_id": asset_id,
         "source_layer": "dashcam",
         "every_n_seconds": every_n_seconds,
@@ -290,7 +280,7 @@ async def contribute_video(
     background_tasks.add_task(
         _process_video_job,
         job_id=job.id,
-        video_path=str(saved),
+        video_path=stored_path,
         asset_id=asset_id,
         source_layer="dashcam",
         every_n_seconds=every_n_seconds,

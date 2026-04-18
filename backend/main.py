@@ -141,7 +141,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Serve uploaded images
+# Serve uploaded images — this mount is only valid while the Storage backend is local filesystem.
 app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
 # Mount routers
