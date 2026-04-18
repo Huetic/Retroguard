@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database import Base  # noqa: F401
 import models  # noqa: F401 — registers HighwayAsset, Measurement, Alert,
                #               MaintenanceOrder, Contributor, ReferencePatch,
-               #               Forecast, JobRun on Base.metadata
+               #               Forecast, JobRun, User on Base.metadata
 
 # ---------------------------------------------------------------------------
 # Alembic Config object (gives access to .ini values)

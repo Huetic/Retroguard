@@ -359,6 +359,45 @@ class CalibratedRLResponse(BaseModel):
     classification: Optional[dict] = None
 
 
+# ── Staff auth ───────────────────────────────────────────────────────────────
+
+class UserCreate(BaseModel):
+    username: str
+    email: Optional[str] = None
+    password: str
+    role: str = "inspector"
+
+
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    email: Optional[str]
+    role: str
+    active: bool
+    created_at: datetime
+    last_login_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
+
+
+class UserUpdate(BaseModel):
+    email: Optional[str] = None
+    role: Optional[str] = None
+    active: Optional[bool] = None
+
+
 class JobRunResponse(BaseModel):
     id: int
     source_type: str

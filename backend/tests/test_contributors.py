@@ -21,8 +21,8 @@ def _contributor_payload(**overrides):
 
 # ── Tests ────────────────────────────────────────────────────────────────────
 
-def test_create_contributor_returns_key_once(client):
-    r = client.post("/api/contributors", json=_contributor_payload())
+def test_create_contributor_returns_key_once(client, admin_headers):
+    r = client.post("/api/contributors", json=_contributor_payload(), headers=admin_headers)
     assert r.status_code == 201, r.text
     body = r.json()
     assert "api_key" in body
@@ -31,11 +31,11 @@ def test_create_contributor_returns_key_once(client):
     assert body["active"] is True
 
 
-def test_list_does_not_expose_raw_key(client):
+def test_list_does_not_expose_raw_key(client, admin_headers):
     # Create a contributor first so the list is non-empty
-    client.post("/api/contributors", json=_contributor_payload(name="ListCheckCorp"))
+    client.post("/api/contributors", json=_contributor_payload(name="ListCheckCorp"), headers=admin_headers)
 
-    r = client.get("/api/contributors")
+    r = client.get("/api/contributors", headers=admin_headers)
     assert r.status_code == 200
     rows = r.json()
     assert len(rows) > 0
@@ -68,7 +68,7 @@ def test_public_upload_rejects_bad_key(client):
     assert r.status_code == 401, f"Expected 401, got {r.status_code}: {r.text}"
 
 
-def test_public_upload_with_valid_key_queues_job(client):
+def test_public_upload_with_valid_key_queues_job(client, admin_headers):
     """
     With a valid API key and a real asset, the endpoint should accept the
     request and return 202 (job queued). The background video processing
@@ -80,7 +80,7 @@ def test_public_upload_with_valid_key_queues_job(client):
     import the router.
     """
     # Create a contributor and note its key
-    r_c = client.post("/api/contributors", json=_contributor_payload(name="VideoTester"))
+    r_c = client.post("/api/contributors", json=_contributor_payload(name="VideoTester"), headers=admin_headers)
     assert r_c.status_code == 201
     api_key = r_c.json()["api_key"]
 
@@ -92,7 +92,7 @@ def test_public_upload_with_valid_key_queues_job(client):
         "gps_lat": 28.5,
         "gps_lon": 77.1,
         "irc_minimum_rl": 200.0,
-    })
+    }, headers=admin_headers)
     assert r_a.status_code == 201
     asset_id = r_a.json()["id"]
 
@@ -110,16 +110,16 @@ def test_public_upload_with_valid_key_queues_job(client):
     assert body["status"] == "queued"
 
 
-def test_rotate_key_invalidates_old(client):
+def test_rotate_key_invalidates_old(client, admin_headers):
     """Create contributor, rotate key, confirm old key → 401 and new key works."""
     # Create
-    r = client.post("/api/contributors", json=_contributor_payload(name="RotateTester"))
+    r = client.post("/api/contributors", json=_contributor_payload(name="RotateTester"), headers=admin_headers)
     assert r.status_code == 201
     cid = r.json()["id"]
     old_key = r.json()["api_key"]
 
     # Rotate
-    r2 = client.post(f"/api/contributors/{cid}/rotate-key")
+    r2 = client.post(f"/api/contributors/{cid}/rotate-key", headers=admin_headers)
     assert r2.status_code == 200, r2.text
     new_key = r2.json()["api_key"]
     assert new_key != old_key, "Rotated key must differ from old key"

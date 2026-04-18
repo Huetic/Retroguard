@@ -18,13 +18,29 @@ import {
   Users,
   TrendingDown,
   QrCode,
+  ShieldCheck,
+  LogOut,
 } from "lucide-react";
 import { api, type ApiMeasurement } from "../lib/api";
+import { useAuth } from "../lib/auth";
 
 /* ----------------------------------------------------------
    Navigation structure (grouped into sections like Momentum)
    ---------------------------------------------------------- */
-function buildGroups(assetCount: number | null, alertCount: number | null) {
+interface NavItem {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  badge?: string;
+  badgeColor?: "alarm";
+}
+
+interface NavGroup {
+  label: string;
+  items: NavItem[];
+}
+
+function buildGroups(assetCount: number | null, alertCount: number | null): NavGroup[] {
   return [
     {
       label: "Command",
@@ -87,6 +103,7 @@ const toneColor: Record<ActivityTone, string> = {
    ---------------------------------------------------------- */
 export default function Sidebar() {
   const pathname = usePathname();
+  const { user, signOut } = useAuth();
   const [assetCount, setAssetCount] = useState<number | null>(null);
   const [alertCount, setAlertCount] = useState<number | null>(null);
   const [activity, setActivity] = useState<
@@ -124,7 +141,11 @@ export default function Sidebar() {
     };
   }, []);
 
-  const groups = buildGroups(assetCount, alertCount);
+  const baseGroups = buildGroups(assetCount, alertCount);
+  const adminGroup: NavGroup[] = user?.role === "admin"
+    ? [{ label: "Admin", items: [{ href: "/admin", label: "Staff users", icon: ShieldCheck }] }]
+    : [];
+  const groups = [...baseGroups, ...adminGroup];
 
   return (
     <aside
@@ -172,10 +193,10 @@ export default function Sidebar() {
                   >
                     <Icon className="w-[16px] h-[16px] flex-shrink-0" strokeWidth={active ? 2.1 : 1.6} />
                     <span className={active ? "font-medium" : ""}>{item.label}</span>
-                    {"badge" in item && item.badge && (
+                    {item.badge && (
                       <span
                         className={`ml-auto text-[10px] font-mono tabular px-1.5 py-0.5 rounded-[5px] ${
-                          "badgeColor" in item && item.badgeColor === "alarm"
+                          item.badgeColor === "alarm"
                             ? "bg-orange/15 text-orange-soft"
                             : "bg-paper-2/[0.06] text-paper-2/55"
                         }`}
@@ -231,6 +252,25 @@ export default function Sidebar() {
           </div>
         </div>
       </nav>
+
+      {/* User + logout */}
+      {user && (
+        <div className="px-3 pb-2">
+          <div className="flex items-center justify-between px-2.5 py-2 rounded-[10px] bg-paper-2/[0.04]">
+            <div className="leading-tight min-w-0">
+              <div className="text-[11.5px] font-medium text-paper-2/85 truncate">{user.username}</div>
+              <div className="text-[9.5px] text-paper-2/40 capitalize">{user.role}</div>
+            </div>
+            <button
+              onClick={signOut}
+              title="Sign out"
+              className="p-1.5 rounded-[7px] text-paper-2/35 hover:text-paper-2/75 hover:bg-paper-2/[0.08] transition"
+            >
+              <LogOut className="w-[13px] h-[13px]" strokeWidth={1.8} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Government branding — Ministry of Road Transport & Highways */}
       <div className="relative px-3 pb-3">

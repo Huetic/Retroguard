@@ -45,10 +45,14 @@ Nothing here is about hackathon demo polish — that's in `SESSION_CHANGELOG.md`
 
 ### Security / auth
 
-- [ ] **Staff authentication** — JWT or session-based. All `/api/*` routes currently open.
-- [ ] **Role model** — inspector / supervisor / admin. Not everyone should be able to delete assets.
+- [x] **Staff authentication** — JWT bearer-token, `POST /api/auth/login` → `TokenResponse`. (`backend/auth.py`, `backend/routers/auth.py`)
+- [x] **Role model** — inspector / supervisor / admin. Applied to all write endpoints. (`backend/auth.py` `require_role`, `backend/routers/users.py`)
 - [ ] Hash API keys at rest (currently plaintext in `contributors.api_key`).
-- [ ] CSRF protection.
+
+### Resolved
+
+- **CSRF protection** — N/A under bearer-token auth; would only be needed if we add cookie sessions.
+
 - [ ] Tighten CORS — currently `allow_origins=["*"]`. Scope to known frontend origins.
 - [ ] Rate-limit public endpoints (`/api/contribute/*`, `/api/qr/decode`).
 

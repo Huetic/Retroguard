@@ -369,10 +369,14 @@ async function fetchJson<T>(
   init?: RequestInit
 ): Promise<T> {
   const url = `${API_BASE}${path}`;
+  // Attach stored JWT if present
+  const token = typeof window !== "undefined" ? localStorage.getItem("retroguard_token") : null;
+  const authHeader: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
   const res = await fetch(url, {
     headers: {
       "Content-Type": "application/json",
-      ...(init?.headers ?? {}),
+      ...authHeader,
+      ...(init?.headers as Record<string, string> | undefined ?? {}),
     },
     ...init,
   });
@@ -690,6 +694,33 @@ export const api = {
       sizeBytes: data.size_bytes,
       contentType: data.content_type,
     };
+  },
+
+  // Auth / Users (staff management)
+  login: (username: string, password: string) =>
+    fetchJson<{ access_token: string; token_type: string; user: import("./auth").AuthUser }>(
+      `/api/auth/login`,
+      { method: "POST", body: JSON.stringify({ username, password }) }
+    ),
+  me: () =>
+    fetchJson<import("./auth").AuthUser>(`/api/auth/me`),
+  listUsers: () =>
+    fetchJson<import("./auth").AuthUser[]>(`/api/users`),
+  createUser: (payload: { username: string; password: string; role: string; email?: string }) =>
+    fetchJson<import("./auth").AuthUser>(`/api/users`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  updateUser: (id: number, payload: { role?: string; active?: boolean; email?: string }) =>
+    fetchJson<import("./auth").AuthUser>(`/api/users/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    }),
+  deleteUser: async (id: number) => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("retroguard_token") : null;
+    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+    const res = await fetch(`${API_BASE}/api/users/${id}`, { method: "DELETE", headers });
+    if (!res.ok) throw new ApiError(`delete user → ${res.status}`, res.status);
   },
 
   // Reports

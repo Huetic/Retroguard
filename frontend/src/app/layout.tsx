@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Sidebar from "../components/Sidebar";
+import { AuthProvider } from "../lib/AuthProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -50,10 +51,12 @@ export default function RootLayout({
               "inset -1px 0 0 rgba(255,255,255,0.30), inset 0 1px 0 rgba(255,255,255,0.55)",
           }}
         />
-        <div className="flex gap-3 p-3 min-h-screen">
-          <Sidebar />
-          <main className="flex-1 min-w-0">{children}</main>
-        </div>
+        <AuthProvider>
+          <div className="flex gap-3 p-3 min-h-screen">
+            <Sidebar />
+            <main className="flex-1 min-w-0">{children}</main>
+          </div>
+        </AuthProvider>
       </body>
     </html>
   );

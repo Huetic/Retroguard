@@ -3,9 +3,12 @@ from sqlalchemy.orm import Session
 from typing import Optional, List
 from datetime import datetime
 
+from auth import get_current_user
 from database import get_db
-from models import HighwayAsset, Measurement, Alert
+from models import HighwayAsset, Measurement, Alert, User
 from schemas import CreateMeasurement, MeasurementResponse
+
+_any_staff = get_current_user
 
 router = APIRouter(prefix="/api/measurements", tags=["Measurements"])
 
@@ -57,7 +60,7 @@ def _update_asset_status(asset: HighwayAsset, rl_value: float, db: Session):
 
 
 @router.post("", response_model=MeasurementResponse, status_code=201)
-def submit_measurement(payload: CreateMeasurement, db: Session = Depends(get_db)):
+def submit_measurement(payload: CreateMeasurement, db: Session = Depends(get_db), _: User = Depends(_any_staff)):
     asset = db.query(HighwayAsset).filter(HighwayAsset.id == payload.asset_id).first()
     if not asset:
         raise HTTPException(status_code=404, detail="Asset not found")
@@ -88,6 +91,7 @@ def list_measurements(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500),
     db: Session = Depends(get_db),
+    _: User = Depends(_any_staff),
 ):
     q = db.query(Measurement)
     if asset_id:
@@ -98,7 +102,7 @@ def list_measurements(
 
 
 @router.get("/recent", response_model=List[MeasurementResponse])
-def recent_measurements(db: Session = Depends(get_db)):
+def recent_measurements(db: Session = Depends(get_db), _: User = Depends(_any_staff)):
     return (
         db.query(Measurement)
         .order_by(Measurement.measured_at.desc())

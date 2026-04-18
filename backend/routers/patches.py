@@ -13,8 +13,9 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
+from auth import get_current_user, require_role
 from database import get_db
-from models import HighwayAsset, ReferencePatch
+from models import HighwayAsset, ReferencePatch, User
 from schemas import (
     CalibratedRLRequest,
     CalibratedRLResponse,
@@ -22,6 +23,9 @@ from schemas import (
     ReferencePatchResponse,
     ReferencePatchUpdate,
 )
+
+_any_staff = get_current_user
+_supervisor_up = require_role("supervisor", "admin")
 
 router = APIRouter(prefix="/api/patches", tags=["Reference Patches"])
 
@@ -31,6 +35,7 @@ def list_patches(
     active: Optional[bool] = Query(None),
     highway_id: Optional[str] = Query(None),
     db: Session = Depends(get_db),
+    _: User = Depends(_any_staff),
 ):
     q = db.query(ReferencePatch)
     if active is not None:
@@ -41,7 +46,7 @@ def list_patches(
 
 
 @router.post("", response_model=ReferencePatchResponse, status_code=201)
-def create_patch(payload: ReferencePatchCreate, db: Session = Depends(get_db)):
+def create_patch(payload: ReferencePatchCreate, db: Session = Depends(get_db), _: User = Depends(_supervisor_up)):
     patch = ReferencePatch(**payload.model_dump())
     db.add(patch)
     db.commit()
@@ -50,7 +55,7 @@ def create_patch(payload: ReferencePatchCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/{patch_id}", response_model=ReferencePatchResponse)
-def get_patch(patch_id: int, db: Session = Depends(get_db)):
+def get_patch(patch_id: int, db: Session = Depends(get_db), _: User = Depends(_any_staff)):
     patch = db.query(ReferencePatch).filter(ReferencePatch.id == patch_id).first()
     if not patch:
         raise HTTPException(404, "Reference patch not found")
@@ -59,7 +64,7 @@ def get_patch(patch_id: int, db: Session = Depends(get_db)):
 
 @router.put("/{patch_id}", response_model=ReferencePatchResponse)
 def update_patch(
-    patch_id: int, payload: ReferencePatchUpdate, db: Session = Depends(get_db)
+    patch_id: int, payload: ReferencePatchUpdate, db: Session = Depends(get_db), _: User = Depends(_supervisor_up)
 ):
     patch = db.query(ReferencePatch).filter(ReferencePatch.id == patch_id).first()
     if not patch:
@@ -72,7 +77,7 @@ def update_patch(
 
 
 @router.delete("/{patch_id}", status_code=204)
-def delete_patch(patch_id: int, db: Session = Depends(get_db)):
+def delete_patch(patch_id: int, db: Session = Depends(get_db), _: User = Depends(_supervisor_up)):
     patch = db.query(ReferencePatch).filter(ReferencePatch.id == patch_id).first()
     if not patch:
         raise HTTPException(404, "Reference patch not found")
@@ -81,7 +86,7 @@ def delete_patch(patch_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/calibrated-rl", response_model=CalibratedRLResponse)
-def calibrated_rl(payload: CalibratedRLRequest, db: Session = Depends(get_db)):
+def calibrated_rl(payload: CalibratedRLRequest, db: Session = Depends(get_db), _: User = Depends(_any_staff)):
     """
     Compute an absolute R_L for a sign, calibrated against a known patch.
 

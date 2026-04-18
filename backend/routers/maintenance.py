@@ -4,13 +4,17 @@ from sqlalchemy import func
 from typing import Optional, List
 from datetime import datetime
 
+from auth import get_current_user, require_role
 from database import get_db
-from models import HighwayAsset, MaintenanceOrder
+from models import HighwayAsset, MaintenanceOrder, User
 from schemas import (
     MaintenanceOrderResponse,
     MaintenanceOrderCreate,
     MaintenanceOrderUpdate,
 )
+
+_any_staff = get_current_user
+_supervisor_up = require_role("supervisor", "admin")
 
 router = APIRouter(prefix="/api/maintenance", tags=["Maintenance"])
 
@@ -22,6 +26,7 @@ def list_orders(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500),
     db: Session = Depends(get_db),
+    _: User = Depends(_any_staff),
 ):
     q = db.query(MaintenanceOrder)
     if status:
@@ -37,7 +42,7 @@ def list_orders(
 
 
 @router.post("", response_model=MaintenanceOrderResponse, status_code=201)
-def create_order(payload: MaintenanceOrderCreate, db: Session = Depends(get_db)):
+def create_order(payload: MaintenanceOrderCreate, db: Session = Depends(get_db), _: User = Depends(_supervisor_up)):
     asset = db.query(HighwayAsset).filter(HighwayAsset.id == payload.asset_id).first()
     if not asset:
         raise HTTPException(404, "Asset not found")
@@ -55,7 +60,7 @@ def create_order(payload: MaintenanceOrderCreate, db: Session = Depends(get_db))
 
 
 @router.get("/{order_id}", response_model=MaintenanceOrderResponse)
-def get_order(order_id: int, db: Session = Depends(get_db)):
+def get_order(order_id: int, db: Session = Depends(get_db), _: User = Depends(_any_staff)):
     order = db.query(MaintenanceOrder).filter(MaintenanceOrder.id == order_id).first()
     if not order:
         raise HTTPException(404, "Order not found")
@@ -64,7 +69,7 @@ def get_order(order_id: int, db: Session = Depends(get_db)):
 
 @router.put("/{order_id}", response_model=MaintenanceOrderResponse)
 def update_order(
-    order_id: int, payload: MaintenanceOrderUpdate, db: Session = Depends(get_db)
+    order_id: int, payload: MaintenanceOrderUpdate, db: Session = Depends(get_db), _: User = Depends(_supervisor_up)
 ):
     order = db.query(MaintenanceOrder).filter(MaintenanceOrder.id == order_id).first()
     if not order:
@@ -78,7 +83,7 @@ def update_order(
 
 
 @router.delete("/{order_id}", status_code=204)
-def delete_order(order_id: int, db: Session = Depends(get_db)):
+def delete_order(order_id: int, db: Session = Depends(get_db), _: User = Depends(_supervisor_up)):
     order = db.query(MaintenanceOrder).filter(MaintenanceOrder.id == order_id).first()
     if not order:
         raise HTTPException(404, "Order not found")
@@ -87,7 +92,7 @@ def delete_order(order_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/stats/summary")
-def stats(db: Session = Depends(get_db)):
+def stats(db: Session = Depends(get_db), _: User = Depends(_any_staff)):
     rows = (
         db.query(MaintenanceOrder.status, func.count(MaintenanceOrder.id))
         .group_by(MaintenanceOrder.status)
@@ -101,7 +106,7 @@ def stats(db: Session = Depends(get_db)):
 
 
 @router.post("/auto-generate", response_model=List[MaintenanceOrderResponse])
-def auto_generate(db: Session = Depends(get_db)):
+def auto_generate(db: Session = Depends(get_db), _: User = Depends(_supervisor_up)):
     """
     Create pending maintenance orders for every critical asset that doesn't
     already have a pending/scheduled order. Priority = how far below IRC min.

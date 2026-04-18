@@ -8,7 +8,7 @@ import pytest
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
-def _create_asset(client, **overrides):
+def _create_asset(client, admin_headers, **overrides):
     payload = {
         "asset_type": "sign",
         "highway_id": "NH-QR",
@@ -19,19 +19,19 @@ def _create_asset(client, **overrides):
         "material_grade": "high_intensity",
     }
     payload.update(overrides)
-    r = client.post("/api/assets", json=payload)
+    r = client.post("/api/assets", json=payload, headers=admin_headers)
     assert r.status_code == 201, r.text
     return r.json()
 
 
 # ── Tests ────────────────────────────────────────────────────────────────────
 
-def test_qr_payload_and_decode_roundtrip(client):
-    asset = _create_asset(client, chainage_km=51.0)
+def test_qr_payload_and_decode_roundtrip(client, admin_headers):
+    asset = _create_asset(client, admin_headers, chainage_km=51.0)
     asset_id = asset["id"]
 
     # Get the QR payload
-    r = client.get(f"/api/qr/{asset_id}/payload")
+    r = client.get(f"/api/qr/{asset_id}/payload", headers=admin_headers)
     assert r.status_code == 200, r.text
     payload = r.json()
     assert payload["asset_id"] == asset_id
@@ -39,16 +39,16 @@ def test_qr_payload_and_decode_roundtrip(client):
 
     # Decode that payload
     raw_json = json.dumps(payload)
-    r2 = client.post("/api/qr/decode", json={"payload": raw_json})
+    r2 = client.post("/api/qr/decode", json={"payload": raw_json}, headers=admin_headers)
     assert r2.status_code == 200, r2.text
     decoded = r2.json()
     assert decoded["match"] is True
     assert decoded["asset_id"] == asset_id
 
 
-def test_qr_scan_measurement_creates_measurement_and_updates_status(client):
+def test_qr_scan_measurement_creates_measurement_and_updates_status(client, admin_headers):
     # Create asset with irc_minimum_rl=200; rl_value=50 is well below → critical
-    asset = _create_asset(client, chainage_km=52.0, irc_minimum_rl=200.0)
+    asset = _create_asset(client, admin_headers, chainage_km=52.0, irc_minimum_rl=200.0)
     asset_id = asset["id"]
 
     # Build a minimal QR payload (same structure qr.py expects)
@@ -70,7 +70,7 @@ def test_qr_scan_measurement_creates_measurement_and_updates_status(client):
         "rl_value": 50.0,
         "confidence": 0.9,
         "device_info": "test-device",
-    })
+    }, headers=admin_headers)
     assert r.status_code == 201, r.text
     body = r.json()
     assert "measurement_id" in body
@@ -81,7 +81,7 @@ def test_qr_scan_measurement_creates_measurement_and_updates_status(client):
     )
 
 
-def test_qr_decode_missing_asset_returns_no_match(client):
+def test_qr_decode_missing_asset_returns_no_match(client, admin_headers):
     """Decoding a QR that references a non-existent asset returns match=False."""
     raw = json.dumps({
         "asset_id": 9999999,
@@ -91,18 +91,18 @@ def test_qr_decode_missing_asset_returns_no_match(client):
         "irc_minimum_rl": 200.0,
         "generated_at": "2026-01-01T00:00:00",
     })
-    r = client.post("/api/qr/decode", json={"payload": raw})
+    r = client.post("/api/qr/decode", json={"payload": raw}, headers=admin_headers)
     assert r.status_code == 200
     assert r.json()["match"] is False
 
 
-def test_qr_decode_bad_payload_returns_400(client):
+def test_qr_decode_bad_payload_returns_400(client, admin_headers):
     """A payload that is neither JSON nor base64 JSON should 400."""
-    r = client.post("/api/qr/decode", json={"payload": "not-json-not-b64!!!"})
+    r = client.post("/api/qr/decode", json={"payload": "not-json-not-b64!!!"}, headers=admin_headers)
     assert r.status_code == 400
 
 
-def test_rate_limit_on_qr_decode(client):
+def test_rate_limit_on_qr_decode(client, admin_headers):
     """
     Fire 25 rapid decode requests. The limit is 20/minute.
     Under TestClient + SlowAPI the rate limiter may or may not trigger
@@ -110,7 +110,7 @@ def test_rate_limit_on_qr_decode(client):
     single in-process transport so IP-based limits can behave differently).
     If no 429 is observed we skip rather than fail.
     """
-    asset = _create_asset(client, chainage_km=99.0)
+    asset = _create_asset(client, admin_headers, chainage_km=99.0)
     raw = json.dumps({
         "asset_id": asset["id"],
         "highway_id": "NH-QR",
@@ -122,7 +122,7 @@ def test_rate_limit_on_qr_decode(client):
 
     statuses = []
     for _ in range(25):
-        r = client.post("/api/qr/decode", json={"payload": raw})
+        r = client.post("/api/qr/decode", json={"payload": raw}, headers=admin_headers)
         statuses.append(r.status_code)
 
     if 429 not in statuses:

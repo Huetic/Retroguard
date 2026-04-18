@@ -7,9 +7,14 @@ from fastapi.responses import Response
 from sqlalchemy.orm import Session
 from typing import Optional, List
 
+from auth import get_current_user, require_role
 from database import get_db
-from models import HighwayAsset
+from models import HighwayAsset, User
 from schemas import AssetResponse, AssetDetailResponse, AssetUpdate, AssetCreate
+
+_any_staff = get_current_user
+_supervisor_up = require_role("supervisor", "admin")
+_admin_only = require_role("admin")
 
 router = APIRouter(prefix="/api/assets", tags=["Assets"])
 
@@ -79,6 +84,7 @@ def list_assets(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500),
     db: Session = Depends(get_db),
+    _: User = Depends(_any_staff),
 ):
     q = db.query(HighwayAsset)
     if highway_id:
@@ -95,6 +101,7 @@ def assets_geojson(
     highway_id: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
     db: Session = Depends(get_db),
+    _: User = Depends(_any_staff),
 ):
     q = db.query(HighwayAsset)
     if highway_id:
@@ -127,7 +134,7 @@ def assets_geojson(
 
 
 @router.get("/{asset_id}", response_model=AssetDetailResponse)
-def get_asset(asset_id: int, db: Session = Depends(get_db)):
+def get_asset(asset_id: int, db: Session = Depends(get_db), _: User = Depends(_any_staff)):
     asset = db.query(HighwayAsset).filter(HighwayAsset.id == asset_id).first()
     if not asset:
         raise HTTPException(status_code=404, detail="Asset not found")
@@ -135,7 +142,7 @@ def get_asset(asset_id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/{asset_id}", response_model=AssetResponse)
-def update_asset(asset_id: int, payload: AssetUpdate, db: Session = Depends(get_db)):
+def update_asset(asset_id: int, payload: AssetUpdate, db: Session = Depends(get_db), _: User = Depends(_supervisor_up)):
     asset = db.query(HighwayAsset).filter(HighwayAsset.id == asset_id).first()
     if not asset:
         raise HTTPException(status_code=404, detail="Asset not found")
@@ -150,7 +157,7 @@ def update_asset(asset_id: int, payload: AssetUpdate, db: Session = Depends(get_
 # ── Onboarding ──────────────────────────────────────────────────────────────
 
 @router.post("", response_model=AssetResponse, status_code=201)
-def create_asset(payload: AssetCreate, db: Session = Depends(get_db)):
+def create_asset(payload: AssetCreate, db: Session = Depends(get_db), _: User = Depends(_supervisor_up)):
     """Manually register a single asset (e.g. from the UI's 'Add asset' form)."""
     asset = HighwayAsset(**payload.model_dump())
     db.add(asset)
@@ -234,7 +241,7 @@ def _find_duplicate(db: Session, data: dict):
 
 
 @router.post("/import")
-async def import_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def import_csv(file: UploadFile = File(...), db: Session = Depends(get_db), _: User = Depends(_supervisor_up)):
     """
     Bulk-import assets from a CSV file.
 
@@ -319,7 +326,7 @@ async def import_csv(file: UploadFile = File(...), db: Session = Depends(get_db)
 
 
 @router.post("/import/force")
-def import_force(payload: List[AssetCreate], db: Session = Depends(get_db)):
+def import_force(payload: List[AssetCreate], db: Session = Depends(get_db), _: User = Depends(_supervisor_up)):
     """
     Force-insert rows that the normal /import flagged as duplicates.
     Bypasses the duplicate check — use only when the operator has

@@ -9,10 +9,13 @@ import base64
 import io
 import json
 
+from auth import get_current_user
 from database import get_db
-from models import HighwayAsset, Measurement
+from models import HighwayAsset, Measurement, User
 from rate_limit import limiter
 from routers.measurements import _update_asset_status
+
+_any_staff = get_current_user
 
 try:
     import qrcode  # type: ignore
@@ -67,7 +70,7 @@ def _asset_payload(a: HighwayAsset) -> QRPayload:
 
 
 @router.get("/{asset_id}/payload", response_model=QRPayload)
-def qr_payload(asset_id: int, db: Session = Depends(get_db)):
+def qr_payload(asset_id: int, db: Session = Depends(get_db), _: User = Depends(_any_staff)):
     asset = db.query(HighwayAsset).filter(HighwayAsset.id == asset_id).first()
     if not asset:
         raise HTTPException(404, "Asset not found")
@@ -75,7 +78,7 @@ def qr_payload(asset_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/{asset_id}/image")
-def qr_image(asset_id: int, db: Session = Depends(get_db)):
+def qr_image(asset_id: int, db: Session = Depends(get_db), _: User = Depends(_any_staff)):
     asset = db.query(HighwayAsset).filter(HighwayAsset.id == asset_id).first()
     if not asset:
         raise HTTPException(404, "Asset not found")
@@ -93,7 +96,7 @@ def qr_image(asset_id: int, db: Session = Depends(get_db)):
 
 @router.post("/decode")
 @limiter.limit("20/minute")
-def qr_decode(request: Request, req: QRDecodeRequest, db: Session = Depends(get_db)):
+def qr_decode(request: Request, req: QRDecodeRequest, db: Session = Depends(get_db), _: User = Depends(_any_staff)):
     """Decode a scanned QR string — accepts raw JSON or base64-encoded JSON."""
     raw = req.payload.strip()
     try:
@@ -123,6 +126,7 @@ def bulk_qr_pdf(
     asset_type: Optional[str] = Query(None),
     limit: int = Query(200, ge=1, le=1000),
     db: Session = Depends(get_db),
+    _: User = Depends(_any_staff),
 ):
     """
     Generate a printable PDF sheet of QR codes — one per asset matching the
@@ -205,7 +209,7 @@ class QRScanMeasurementRequest(BaseModel):
 
 @router.post("/scan-measurement", status_code=201)
 @limiter.limit("30/minute")
-def qr_scan_measurement(request: Request, req: QRScanMeasurementRequest, db: Session = Depends(get_db)):
+def qr_scan_measurement(request: Request, req: QRScanMeasurementRequest, db: Session = Depends(get_db), _: User = Depends(_any_staff)):
     """
     Inspector scans a sign's QR with the phone, the app extracts asset_id
     from the payload, and we log a measurement in one round-trip — no

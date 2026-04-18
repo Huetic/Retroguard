@@ -16,14 +16,18 @@ from typing import List
 from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlalchemy.orm import Session
 
+from auth import get_current_user, require_role
 from database import get_db
-from models import Contributor
+from models import Contributor, User
 from schemas import (
     ContributorCreate,
     ContributorResponse,
     ContributorUpdate,
     ContributorWithKey,
 )
+
+_any_staff = get_current_user
+_admin_only = require_role("admin")
 
 router = APIRouter(prefix="/api/contributors", tags=["Contributors"])
 
@@ -56,12 +60,12 @@ def require_contributor(
 
 
 @router.get("", response_model=List[ContributorResponse])
-def list_contributors(db: Session = Depends(get_db)):
+def list_contributors(db: Session = Depends(get_db), _: User = Depends(_admin_only)):
     return db.query(Contributor).order_by(Contributor.id.desc()).all()
 
 
 @router.post("", response_model=ContributorWithKey, status_code=201)
-def create_contributor(payload: ContributorCreate, db: Session = Depends(get_db)):
+def create_contributor(payload: ContributorCreate, db: Session = Depends(get_db), _: User = Depends(_admin_only)):
     """Create a new contributor. The API key is returned ONCE here only."""
     plaintext = _new_key()
     c = Contributor(
@@ -94,7 +98,7 @@ def create_contributor(payload: ContributorCreate, db: Session = Depends(get_db)
 
 
 @router.put("/{cid}", response_model=ContributorResponse)
-def update_contributor(cid: int, payload: ContributorUpdate, db: Session = Depends(get_db)):
+def update_contributor(cid: int, payload: ContributorUpdate, db: Session = Depends(get_db), _: User = Depends(_admin_only)):
     c = db.query(Contributor).filter(Contributor.id == cid).first()
     if not c:
         raise HTTPException(404, "Contributor not found")
@@ -106,7 +110,7 @@ def update_contributor(cid: int, payload: ContributorUpdate, db: Session = Depen
 
 
 @router.post("/{cid}/rotate-key", response_model=ContributorWithKey)
-def rotate_key(cid: int, db: Session = Depends(get_db)):
+def rotate_key(cid: int, db: Session = Depends(get_db), _: User = Depends(_admin_only)):
     """Issue a fresh API key, invalidating the old one."""
     c = db.query(Contributor).filter(Contributor.id == cid).first()
     if not c:
@@ -132,7 +136,7 @@ def rotate_key(cid: int, db: Session = Depends(get_db)):
 
 
 @router.delete("/{cid}", status_code=204)
-def delete_contributor(cid: int, db: Session = Depends(get_db)):
+def delete_contributor(cid: int, db: Session = Depends(get_db), _: User = Depends(_admin_only)):
     c = db.query(Contributor).filter(Contributor.id == cid).first()
     if not c:
         raise HTTPException(404, "Contributor not found")

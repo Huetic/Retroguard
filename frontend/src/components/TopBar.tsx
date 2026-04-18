@@ -9,7 +9,9 @@ import {
   Calendar,
   ChevronDown,
   Check,
+  LogOut,
 } from "lucide-react";
+import { useAuth } from "../lib/auth";
 
 type Crumb = { label: string; href?: string };
 
@@ -30,6 +32,8 @@ export default function TopBar({
 }: {
   crumbs?: Crumb[];
 }) {
+  const { user, signOut } = useAuth();
+
   // ---------- Theme (dark mode) ----------
   const [theme, setTheme] = useState<"light" | "dark">("light");
   useEffect(() => {
@@ -163,12 +167,24 @@ export default function TopBar({
             style={{ background: "var(--color-orange)" }}
           />
         </button>
-        <div
-          className="w-9 h-9 rounded-full flex items-center justify-center text-[11px] font-semibold text-ink ml-1"
-          style={{ background: "linear-gradient(135deg, #FFB58C, #FF6B35)" }}
-        >
-          MD
-        </div>
+        {user && (
+          <div className="flex items-center gap-1.5 ml-1">
+            <div
+              className="w-9 h-9 rounded-full flex items-center justify-center text-[11px] font-semibold text-white shrink-0"
+              style={{ background: "linear-gradient(135deg, #FFB58C, #FF6B35)" }}
+              title={`${user.username} · ${user.role}`}
+            >
+              {user.username.slice(0, 2).toUpperCase()}
+            </div>
+            <button
+              onClick={signOut}
+              title="Sign out"
+              className="pill bg-paper/60 hover:bg-paper text-ink/50 hover:text-ink/80 border border-ink/5 w-9 !px-0 transition"
+            >
+              <LogOut className="w-[14px] h-[14px]" strokeWidth={1.8} />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

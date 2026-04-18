@@ -7,6 +7,20 @@ from datetime import datetime
 from database import Base
 
 
+class User(Base):
+    """Staff user for JWT-based authentication. Separate from contributor/API-key auth."""
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(100), unique=True, nullable=False, index=True)
+    email = Column(String(200), nullable=True)
+    password_hash = Column(String(200), nullable=False)
+    role = Column(String(20), nullable=False, default="inspector")  # admin | supervisor | inspector
+    active = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    last_login_at = Column(DateTime, nullable=True)
+
+
 class HighwayAsset(Base):
     __tablename__ = "highway_assets"
 

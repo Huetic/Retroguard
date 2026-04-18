@@ -17,10 +17,14 @@ from fastapi import (
 )
 from sqlalchemy.orm import Session
 
+from auth import get_current_user, require_role
 from database import SessionLocal, get_db
 from rate_limit import limiter
-from models import HighwayAsset, JobRun, Measurement
+from models import HighwayAsset, JobRun, Measurement, User
 from schemas import JobRunResponse
+
+_any_staff = get_current_user
+_supervisor_up = require_role("supervisor", "admin")
 from routers.measurements import _update_asset_status
 from ml_service import estimate_rl_from_frame, sample_video_frames
 from storage import storage
@@ -151,6 +155,7 @@ async def enqueue_video(
     angle: float = Form(0.2),
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
+    _: User = Depends(_supervisor_up),
 ):
     """
     Queue a video ingestion job. Returns 202 immediately with a job id.
@@ -205,6 +210,7 @@ def list_jobs(
     source_type: Optional[str] = None,
     limit: int = 50,
     db: Session = Depends(get_db),
+    _: User = Depends(_any_staff),
 ):
     q = db.query(JobRun)
     if status:
@@ -215,7 +221,7 @@ def list_jobs(
 
 
 @router.get("/jobs/{job_id}", response_model=JobRunResponse)
-def get_job(job_id: int, db: Session = Depends(get_db)):
+def get_job(job_id: int, db: Session = Depends(get_db), _: User = Depends(_any_staff)):
     job = db.query(JobRun).filter(JobRun.id == job_id).first()
     if not job:
         raise HTTPException(404, "Job not found")

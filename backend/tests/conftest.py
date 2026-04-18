@@ -68,3 +68,17 @@ def client(app):
     from starlette.testclient import TestClient
     with TestClient(app) as c:
         yield c
+
+
+@pytest.fixture(scope="session")
+def admin_token(client):
+    """JWT token for the bootstrapped default admin user."""
+    r = client.post("/api/auth/login", json={"username": "admin", "password": "admin"})
+    assert r.status_code == 200, f"Admin login failed: {r.text}"
+    return r.json()["access_token"]
+
+
+@pytest.fixture(scope="session")
+def admin_headers(admin_token):
+    """Authorization header dict for the default admin user."""
+    return {"Authorization": f"Bearer {admin_token}"}

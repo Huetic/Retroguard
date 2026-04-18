@@ -72,7 +72,7 @@ from database import engine, SessionLocal, Base  # noqa: E402
 from janitor import sweep_stale_jobs  # noqa: E402
 from models import (  # noqa: F401,E402 — ensure tables registered
     HighwayAsset, Measurement, Alert, MaintenanceOrder,
-    JobRun, ReferencePatch, Contributor, Forecast,
+    JobRun, ReferencePatch, Contributor, Forecast, User,
 )
 from rate_limit import limiter  # noqa: E402
 from seed_data import seed  # noqa: E402
@@ -81,6 +81,8 @@ from routers import (  # noqa: E402
     assets, measurements, alerts, dashboard, reports,
     ml, maintenance, qr, uploads, ingest, patches, contributors, forecast,
 )
+from routers import auth as auth_router  # noqa: E402
+from routers import users as users_router  # noqa: E402
 
 UPLOAD_DIR = Path(__file__).resolve().parent / "uploads"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
@@ -102,6 +104,26 @@ async def lifespan(app: FastAPI):
         swept = sweep_stale_jobs(db)
         if swept:
             logger.info("Startup janitor swept stale jobs", extra={"swept": swept})
+    finally:
+        db.close()
+
+    # Bootstrap default admin if users table is empty
+    db = SessionLocal()
+    try:
+        from auth import hash_password
+        if db.query(User).count() == 0:
+            admin = User(
+                username="admin",
+                password_hash=hash_password("admin"),
+                role="admin",
+                active=True,
+            )
+            db.add(admin)
+            db.commit()
+            logger.warning(
+                "Default admin created",
+                extra={"username": "admin", "action": "ROTATE_DEFAULT_ADMIN_PASSWORD"},
+            )
     finally:
         db.close()
 
@@ -162,6 +184,8 @@ app.add_middleware(
 app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
 # Mount routers
+app.include_router(auth_router.router)
+app.include_router(users_router.router)
 app.include_router(assets.router)
 app.include_router(measurements.router)
 app.include_router(alerts.router)
