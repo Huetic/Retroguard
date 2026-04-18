@@ -38,7 +38,7 @@ export default function AssetsPage() {
   const [statusFilter, setStatusFilter] = useState("All");
   const [typeFilter, setTypeFilter] = useState("All");
 
-  const { data: assets, loading, error } = useApi<UiAsset[]>(
+  const { data: assets, loading, error, refetch } = useApi<UiAsset[]>(
     () => api.listAssets(),
     []
   );
@@ -80,7 +80,6 @@ export default function AssetsPage() {
   // Modal state
   const [showAdd, setShowAdd] = useState(false);
   const [showImport, setShowImport] = useState(false);
-  const { refetch } = useApi<UiAsset[]>(() => api.listAssets(), []);
 
   // Export currently-filtered rows as CSV
   const handleExport = () => {
