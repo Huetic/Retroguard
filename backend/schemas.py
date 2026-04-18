@@ -32,6 +32,20 @@ class MeasurementResponse(BaseModel):
 
 # ── Asset ────────────────────────────────────────────────────────────────────
 
+class AssetCreate(BaseModel):
+    asset_type: str
+    highway_id: str
+    chainage_km: float
+    gps_lat: float
+    gps_lon: float
+    irc_minimum_rl: float
+    material_grade: Optional[str] = None
+    installation_date: Optional[datetime] = None
+    orientation: Optional[str] = None
+    current_rl: Optional[float] = None
+    status: str = "compliant"
+
+
 class AssetUpdate(BaseModel):
     asset_type: Optional[str] = None
     highway_id: Optional[str] = None
