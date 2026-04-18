@@ -101,6 +101,20 @@ export interface ApiAlertSummary {
   total: number;
 }
 
+export interface ApiJobRun {
+  id: number;
+  source_type: string;
+  status: "queued" | "running" | "done" | "failed";
+  asset_id: number | null;
+  measurements_created: number;
+  params_json: string | null;
+  result_json: string | null;
+  error: string | null;
+  created_at: string;
+  started_at: string | null;
+  finished_at: string | null;
+}
+
 export interface ApiComplianceReport {
   highway_id: string;
   generated_at: string;
@@ -469,6 +483,38 @@ export const api = {
     });
   },
   assetImportTemplateUrl: () => `${API_BASE}/api/assets/import/template`,
+
+  // Ingestion jobs (Layer 2 CCTV / Layer 4 dashcam)
+  async enqueueVideoIngest(payload: {
+    file: File;
+    asset_id: number;
+    source_layer: "cctv" | "dashcam";
+    every_n_seconds?: number;
+    max_frames?: number;
+  }): Promise<ApiJobRun> {
+    const fd = new FormData();
+    fd.append("file", payload.file);
+    fd.append("asset_id", String(payload.asset_id));
+    fd.append("source_layer", payload.source_layer);
+    if (payload.every_n_seconds !== undefined)
+      fd.append("every_n_seconds", String(payload.every_n_seconds));
+    if (payload.max_frames !== undefined)
+      fd.append("max_frames", String(payload.max_frames));
+    const res = await fetch(`${API_BASE}/api/ingest/video`, {
+      method: "POST",
+      body: fd,
+    });
+    if (!res.ok) {
+      let detail: string | undefined;
+      try { detail = (await res.json()).detail; } catch { /* ignore */ }
+      throw new ApiError(`ingest → ${res.status}${detail ? ` · ${detail}` : ""}`, res.status);
+    }
+    return res.json();
+  },
+  listJobs: (limit = 50) =>
+    fetchJson<ApiJobRun[]>(`/api/ingest/jobs?limit=${limit}`),
+  getJob: (id: number) =>
+    fetchJson<ApiJobRun>(`/api/ingest/jobs/${id}`),
 
   // Uploads — POST multipart image, receive stored public path
   async uploadImage(file: File | Blob, filename?: string): Promise<UploadResult> {

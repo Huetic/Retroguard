@@ -221,3 +221,22 @@ class PredictionSeriesPoint(BaseModel):
 class PredictionResponse(BaseModel):
     summary: dict
     series: List[PredictionSeriesPoint]
+
+
+# ── Ingestion jobs ──────────────────────────────────────────────────────────
+
+class JobRunResponse(BaseModel):
+    id: int
+    source_type: str
+    status: str
+    asset_id: Optional[int]
+    measurements_created: int
+    params_json: Optional[str]
+    result_json: Optional[str]
+    error: Optional[str]
+    created_at: datetime
+    started_at: Optional[datetime]
+    finished_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True

@@ -74,3 +74,23 @@ class MaintenanceOrder(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     asset = relationship("HighwayAsset", back_populates="maintenance_orders")
+
+
+class JobRun(Base):
+    """
+    Tracks every background ingestion job (video uploads, bulk imports, etc.).
+    Gives the UI a persistent history and lets users poll progress.
+    """
+    __tablename__ = "job_runs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    source_type = Column(String(30), nullable=False, index=True)  # cctv / dashcam / csv / ...
+    status = Column(String(20), nullable=False, default="queued", index=True)  # queued / running / done / failed
+    params_json = Column(Text, nullable=True)      # json of the original request
+    result_json = Column(Text, nullable=True)      # json of the final result (counts, etc.)
+    error = Column(Text, nullable=True)
+    asset_id = Column(Integer, ForeignKey("highway_assets.id"), nullable=True, index=True)
+    measurements_created = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    started_at = Column(DateTime, nullable=True)
+    finished_at = Column(DateTime, nullable=True)
