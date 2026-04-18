@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   LayoutGrid,
   MapPin,
@@ -13,42 +14,57 @@ import {
   Radio,
   Landmark,
 } from "lucide-react";
+import { api, type ApiMeasurement } from "../lib/api";
 
 /* ----------------------------------------------------------
    Navigation structure (grouped into sections like Momentum)
    ---------------------------------------------------------- */
-const groups = [
-  {
-    label: "Command",
-    items: [
-      { href: "/",       label: "Overview",       icon: LayoutGrid },
-      { href: "/map",    label: "Corridor map",   icon: MapPin     },
-    ],
-  },
-  {
-    label: "Data",
-    items: [
-      { href: "/assets", label: "Asset registry", icon: Boxes,    badge: "205" },
-      { href: "/alerts", label: "Live alerts",    icon: BellRing, badge: "18",  badgeColor: "alarm" },
-    ],
-  },
-  {
-    label: "Operations",
-    items: [
-      { href: "/measure", label: "Field capture",  icon: Smartphone, badge: "Beta" },
-      { href: "/reports", label: "Compliance",     icon: ScrollText              },
-    ],
-  },
-];
+function buildGroups(assetCount: number | null, alertCount: number | null) {
+  return [
+    {
+      label: "Command",
+      items: [
+        { href: "/",       label: "Overview",       icon: LayoutGrid },
+        { href: "/map",    label: "Corridor map",   icon: MapPin     },
+      ],
+    },
+    {
+      label: "Data",
+      items: [
+        { href: "/assets", label: "Asset registry", icon: Boxes,
+          badge: assetCount !== null ? String(assetCount) : "—" },
+        { href: "/alerts", label: "Live alerts",    icon: BellRing,
+          badge: alertCount !== null ? String(alertCount) : "—",
+          badgeColor: "alarm" as const },
+      ],
+    },
+    {
+      label: "Operations",
+      items: [
+        { href: "/measure", label: "Field capture",  icon: Smartphone, badge: "Beta" },
+        { href: "/reports", label: "Compliance",     icon: ScrollText              },
+      ],
+    },
+  ];
+}
 
 type ActivityTone = "go" | "caution" | "alarm" | "info";
-const activity: { tone: ActivityTone; title: string; meta: string; when: string }[] = [
-  { tone: "go",      title: "Measurement logged",       meta: "NH-48 · km 234+100",  when: "just now" },
-  { tone: "alarm",   title: "Critical flagged",         meta: "NH-44 · km 80+200",   when: "2m ago" },
-  { tone: "info",    title: "Crew Alpha dispatched",    meta: "NH-66 · km 210+500",  when: "14m" },
-  { tone: "go",      title: "QR verified",              meta: "DME · km 48+600",     when: "1h" },
-  { tone: "caution", title: "RL drop · 12% / month",    meta: "NH-44 · km 550+300",  when: "2h" },
-];
+
+function timeAgo(iso: string): string {
+  const then = new Date(iso).getTime();
+  const diffSec = Math.max(0, Math.floor((Date.now() - then) / 1000));
+  if (diffSec < 60) return "just now";
+  if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m`;
+  if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h`;
+  return `${Math.floor(diffSec / 86400)}d`;
+}
+
+function toneForSource(src: string): ActivityTone {
+  if (src === "smartphone") return "go";
+  if (src === "cctv") return "info";
+  if (src === "dashcam") return "caution";
+  return "go";
+}
 const toneColor: Record<ActivityTone, string> = {
   go:      "#5EC486",
   caution: "#F3AD3C",
@@ -61,6 +77,44 @@ const toneColor: Record<ActivityTone, string> = {
    ---------------------------------------------------------- */
 export default function Sidebar() {
   const pathname = usePathname();
+  const [assetCount, setAssetCount] = useState<number | null>(null);
+  const [alertCount, setAlertCount] = useState<number | null>(null);
+  const [activity, setActivity] = useState<
+    { tone: ActivityTone; title: string; meta: string; when: string }[]
+  >([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const [stats, recent] = await Promise.all([
+          api.dashboardStats(),
+          api.recentMeasurements(),
+        ]);
+        if (cancelled) return;
+        setAssetCount(stats.total_assets);
+        setAlertCount(stats.alerts_active);
+        setActivity(
+          recent.slice(0, 5).map((m: ApiMeasurement) => ({
+            tone: toneForSource(m.source_layer),
+            title: `Measurement logged`,
+            meta: `Asset #${m.asset_id} · R_L ${Math.round(m.rl_value)}`,
+            when: timeAgo(m.measured_at),
+          }))
+        );
+      } catch {
+        /* keep placeholders */
+      }
+    };
+    load();
+    const id = setInterval(load, 30000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, []);
+
+  const groups = buildGroups(assetCount, alertCount);
 
   return (
     <aside

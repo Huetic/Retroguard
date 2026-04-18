@@ -416,6 +416,8 @@ export const api = {
       body: JSON.stringify(payload),
     });
   },
+  recentMeasurements: () =>
+    fetchJson<ApiMeasurement[]>(`/api/measurements/recent`),
 
   // Uploads — POST multipart image, receive stored public path
   async uploadImage(file: File | Blob, filename?: string): Promise<UploadResult> {

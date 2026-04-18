@@ -700,11 +700,12 @@ function KPI({
    Updates / Measurements card (wide progress)
    ========================================================= */
 function UpdatesCard() {
-  const total = 1892;
-  const compliant = 1382;
-  const warning = 340;
-  const critical = 170;
-  const pct = (n: number) => Math.round((n / total) * 100);
+  const { data: stats } = useApi(() => api.dashboardStats(), []);
+  const total = stats?.total_assets ?? 0;
+  const compliant = stats?.compliant_count ?? 0;
+  const warning = stats?.warning_count ?? 0;
+  const critical = stats?.critical_count ?? 0;
+  const pct = (n: number) => (total ? Math.round((n / total) * 100) : 0);
 
   return (
     <section className="col-span-3 card p-5 rise" style={{ animationDelay: "60ms" }}>
@@ -903,6 +904,26 @@ function AlertsFeed() {
    PAGE
    ========================================================= */
 export default function DashboardPage() {
+  const { data: stats } = useApi(() => api.dashboardStats(), []);
+  const { data: resolvedAlerts } = useApi(
+    () => api.listAlerts({ is_resolved: true, limit: 500 }),
+    []
+  );
+  const { data: assetsList } = useApi(
+    () => api.listAssets({ limit: 500 }),
+    []
+  );
+
+  const alertsCleared = resolvedAlerts?.length ?? 0;
+  const avgRlRatio =
+    assetsList && assetsList.length
+      ? assetsList.reduce(
+          (s, a) => s + (a.ircMin ? a.currentRL / a.ircMin : 0),
+          0
+        ) / assetsList.length
+      : 0;
+  const totalNodes = stats?.total_assets ?? 0;
+
   return (
     <div className="px-6 pt-4 pb-10 max-w-[1480px]">
       {/* ---------- top bar ---------- */}
@@ -943,24 +964,24 @@ export default function DashboardPage() {
         <KPI
           idKey="alerts"
           label="Alerts cleared"
-          value="282"
-          delta="+18.22%"
-          deltaPositive
+          value={alertsCleared.toString()}
+          delta={`${stats?.alerts_active ?? 0} active`}
+          deltaPositive={(stats?.alerts_active ?? 0) === 0}
           spark={[10, 12, 9, 16, 18, 15, 20, 22, 26, 28]}
-          goal={{ target: 320, current: 282 }}
-          goalLabel="Quarterly target"
+          goal={{ target: alertsCleared + (stats?.alerts_active ?? 0), current: alertsCleared }}
+          goalLabel="Resolved of total raised"
           className="col-span-3"
           delay={180}
         />
         <KPI
           idKey="rl"
           label="Avg RL score"
-          value="3.78"
+          value={avgRlRatio.toFixed(2)}
           unit="× IRC min"
-          delta="−5.48"
-          deltaPositive={false}
+          delta={avgRlRatio >= 1 ? "above minimum" : "below minimum"}
+          deltaPositive={avgRlRatio >= 1}
           spark={[22, 20, 24, 21, 18, 19, 17, 16, 15, 14]}
-          goal={{ target: 5, current: 3.78, unit: "×" }}
+          goal={{ target: 1.2, current: Math.min(avgRlRatio, 1.2), unit: "×" }}
           goalLabel="Safe operating margin"
           className="col-span-3"
           delay={220}
@@ -1000,7 +1021,7 @@ export default function DashboardPage() {
       {/* Footer line */}
       <div className="mt-8 flex items-center justify-between text-[10.5px] text-ink/40 font-mono uppercase tracking-[0.18em]">
         <span>retroguard v0.9 · 6th nhai innovation hackathon</span>
-        <span>sync · 14:32 IST · 205 nodes · uplink healthy</span>
+        <span>sync · live · {totalNodes} nodes · uplink healthy</span>
       </div>
     </div>
   );
