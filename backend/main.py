@@ -5,6 +5,22 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 
+from alembic.config import Config as AlembicConfig
+from alembic import command as alembic_command
+
+
+def _run_migrations() -> None:
+    """Run `alembic upgrade head` programmatically against the configured DB."""
+    backend_dir = Path(__file__).resolve().parent
+    cfg = AlembicConfig(str(backend_dir / "alembic.ini"))
+    cfg.set_main_option("script_location", str(backend_dir / "alembic"))
+    # Honour DATABASE_URL already set in the environment (including the test override).
+    cfg.set_main_option(
+        "sqlalchemy.url",
+        os.getenv("DATABASE_URL", "sqlite:///./retroguard.db"),
+    )
+    alembic_command.upgrade(cfg, "head")
+
 # Load .env before importing anything that touches DATABASE_URL
 try:
     from dotenv import load_dotenv
@@ -72,7 +88,8 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    Base.metadata.create_all(bind=engine)
+    _run_migrations()
+    # Base.metadata.create_all(bind=engine)  # replaced by alembic upgrade head
 
     # Log DB driver (never the password)
     db_url_safe = engine.url.render_as_string(hide_password=True)
