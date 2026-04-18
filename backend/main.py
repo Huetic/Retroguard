@@ -1,6 +1,13 @@
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+# Load .env before importing anything that touches DATABASE_URL
+try:
+    from dotenv import load_dotenv
+    load_dotenv(Path(__file__).resolve().parent / ".env")
+except ImportError:
+    pass
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
