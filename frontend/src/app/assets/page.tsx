@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
   Search,
@@ -52,6 +52,14 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
 const PAGE_SIZE = 25;
 
 export default function AssetsPage() {
+  return (
+    <Suspense fallback={null}>
+      <AssetsPageInner />
+    </Suspense>
+  );
+}
+
+function AssetsPageInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const focusParam = searchParams.get("focus");
