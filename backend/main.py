@@ -9,7 +9,13 @@ from database import engine, SessionLocal, Base
 from models import HighwayAsset, Measurement, Alert, MaintenanceOrder  # noqa: F401 — ensure tables registered
 from seed_data import seed
 
-from routers import assets, measurements, alerts, dashboard, reports, ml, maintenance, qr
+from routers import (
+    assets, measurements, alerts, dashboard, reports,
+    ml, maintenance, qr, uploads,
+)
+
+UPLOAD_DIR = Path(__file__).resolve().parent / "uploads"
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 
 @asynccontextmanager
@@ -39,6 +45,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Serve uploaded images
+app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
+
 # Mount routers
 app.include_router(assets.router)
 app.include_router(measurements.router)
@@ -48,18 +57,14 @@ app.include_router(reports.router)
 app.include_router(ml.router)
 app.include_router(maintenance.router)
 app.include_router(qr.router)
-
-# Serve uploaded images so frontend can display them via image_path
-_UPLOADS = Path(__file__).resolve().parent / "uploads"
-_UPLOADS.mkdir(exist_ok=True)
-app.mount("/uploads", StaticFiles(directory=str(_UPLOADS)), name="uploads")
+app.include_router(uploads.router)
 
 
 @app.get("/")
 def root():
     return {
         "name": "RetroGuard API",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "docs": "/docs",
         "description": "AI-powered retroreflectivity assessment for NHAI",
     }

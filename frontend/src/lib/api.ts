@@ -61,6 +61,21 @@ export interface ApiMeasurement {
   image_path: string | null;
 }
 
+export interface ApiUpload {
+  image_path: string;
+  filename: string;
+  size_bytes: number;
+  content_type: string;
+}
+
+export interface UploadResult {
+  imagePath: string;   // server-relative, e.g. "/uploads/20260417_...jpg"
+  imageUrl: string;    // fully-qualified URL for <img src>
+  filename: string;
+  sizeBytes: number;
+  contentType: string;
+}
+
 export interface ApiDashboardStats {
   total_assets: number;
   compliant_count: number;
@@ -394,11 +409,43 @@ export const api = {
     confidence?: number;
     source_layer: SourceLayer;
     device_info?: string;
+    image_path?: string;
   }): Promise<ApiMeasurement> {
     return fetchJson<ApiMeasurement>(`/api/measurements`, {
       method: "POST",
       body: JSON.stringify(payload),
     });
+  },
+
+  // Uploads — POST multipart image, receive stored public path
+  async uploadImage(file: File | Blob, filename?: string): Promise<UploadResult> {
+    const form = new FormData();
+    form.append("file", file, filename ?? (file instanceof File ? file.name : "capture.jpg"));
+    const res = await fetch(`${API_BASE}/api/uploads`, {
+      method: "POST",
+      body: form,
+    });
+    if (!res.ok) {
+      let detail: string | undefined;
+      try {
+        const j = await res.json();
+        detail = j.detail ?? j.message;
+      } catch {
+        /* ignore */
+      }
+      throw new ApiError(
+        `/api/uploads → ${res.status}${detail ? ` · ${detail}` : ""}`,
+        res.status
+      );
+    }
+    const data = (await res.json()) as ApiUpload;
+    return {
+      imagePath: data.image_path,
+      imageUrl: `${API_BASE}${data.image_path}`,
+      filename: data.filename,
+      sizeBytes: data.size_bytes,
+      contentType: data.content_type,
+    };
   },
 
   // Reports
