@@ -2,6 +2,9 @@
 
 Branch: `feat/complete-backend` → PR #1
 
+> See `TODO.md` for outstanding work — blockers to public release, gov-specific
+> compliance items, ML quality gaps, and the full backend/frontend test backlog.
+
 ---
 
 ## 1. Backend foundation (completed)
@@ -172,6 +175,8 @@ Branch: `feat/complete-backend` → PR #1
 - QR code generation for individual assets
 
 ## 11. What to flag as "not demo-ready"
+
+(Full release blockers, gov compliance items, ML quality gaps, and the test backlog now live in `TODO.md`.)
 
 - Layer 2 video ingestion (untested on real footage, no UI)
 - "Hi, Madhav" greeting, calendar, workload heatmap on `/` (still placeholder)
