@@ -7,7 +7,6 @@ Clients POST a video, get a JobRun id immediately, and poll for status.
 Uses FastAPI BackgroundTasks for v1 (in-process). Swap to Celery/RQ/pg-boss
 later with no API contract change — the jobs table is the stable contract.
 """
-from __future__ import annotations
 
 import json
 import uuid
@@ -16,11 +15,12 @@ from pathlib import Path
 from typing import List, Optional
 
 from fastapi import (
-    APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile,
+    APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, Request, UploadFile,
 )
 from sqlalchemy.orm import Session
 
 from database import SessionLocal, get_db
+from rate_limit import limiter
 from models import HighwayAsset, JobRun, Measurement
 from schemas import JobRunResponse
 from routers.measurements import _update_asset_status
@@ -240,7 +240,9 @@ contribute_router = APIRouter(prefix="/api/contribute", tags=["Contribute (publi
 
 
 @contribute_router.post("/video", response_model=JobRunResponse, status_code=202)
+@limiter.limit("5/minute")
 async def contribute_video(
+    request: Request,
     background_tasks: BackgroundTasks,
     asset_id: int = Form(...),
     every_n_seconds: float = Form(2.0),

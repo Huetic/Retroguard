@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 from contextlib import asynccontextmanager
@@ -46,13 +47,18 @@ from fastapi import FastAPI  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from fastapi.responses import JSONResponse  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
+from slowapi import _rate_limit_exceeded_handler  # noqa: E402
+from slowapi.errors import RateLimitExceeded  # noqa: E402
+from slowapi.middleware import SlowAPIMiddleware  # noqa: E402
 from sqlalchemy import text  # noqa: E402
 
 from database import engine, SessionLocal, Base  # noqa: E402
+from janitor import sweep_stale_jobs  # noqa: E402
 from models import (  # noqa: F401,E402 — ensure tables registered
     HighwayAsset, Measurement, Alert, MaintenanceOrder,
     JobRun, ReferencePatch, Contributor, Forecast,
 )
+from rate_limit import limiter  # noqa: E402
 from seed_data import seed  # noqa: E402
 
 from routers import (  # noqa: E402
@@ -73,6 +79,15 @@ async def lifespan(app: FastAPI):
     driver = db_url_safe.split("://")[0] if "://" in db_url_safe else db_url_safe
     logger.info("App startup", extra={"db_driver": driver, "version": app.version})
 
+    # Heal any stuck jobs left over from a previous crash
+    db = SessionLocal()
+    try:
+        swept = sweep_stale_jobs(db)
+        if swept:
+            logger.info("Startup janitor swept stale jobs", extra={"swept": swept})
+    finally:
+        db.close()
+
     # Toggle: set SEED_DEMO=0 in backend/.env to start with an empty DB.
     # Default is ON so first-time contributors still see a populated demo.
     if os.getenv("SEED_DEMO", "1") != "0":
@@ -81,7 +96,21 @@ async def lifespan(app: FastAPI):
             seed(db)
         finally:
             db.close()
+
+    async def _periodic_sweep():
+        while True:
+            await asyncio.sleep(300)  # every 5 min
+            db = SessionLocal()
+            try:
+                sweep_stale_jobs(db)
+            except Exception:
+                pass
+            finally:
+                db.close()
+
+    task = asyncio.create_task(_periodic_sweep())
     yield
+    task.cancel()
 
 
 app = FastAPI(
@@ -90,6 +119,10 @@ app = FastAPI(
     version="1.1.0",
     lifespan=lifespan,
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 # ---------------------------------------------------------------------------
 # CORS — origins from env var, defaulting to localhost dev ports

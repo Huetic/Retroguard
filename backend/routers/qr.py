@@ -1,5 +1,5 @@
 """Layer 6: degradation-encoding QR codes for signs."""
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
@@ -11,6 +11,7 @@ import json
 
 from database import get_db
 from models import HighwayAsset, Measurement
+from rate_limit import limiter
 from routers.measurements import _update_asset_status
 
 try:
@@ -91,7 +92,8 @@ def qr_image(asset_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/decode")
-def qr_decode(req: QRDecodeRequest, db: Session = Depends(get_db)):
+@limiter.limit("20/minute")
+def qr_decode(request: Request, req: QRDecodeRequest, db: Session = Depends(get_db)):
     """Decode a scanned QR string — accepts raw JSON or base64-encoded JSON."""
     raw = req.payload.strip()
     try:
@@ -202,7 +204,8 @@ class QRScanMeasurementRequest(BaseModel):
 
 
 @router.post("/scan-measurement", status_code=201)
-def qr_scan_measurement(req: QRScanMeasurementRequest, db: Session = Depends(get_db)):
+@limiter.limit("30/minute")
+def qr_scan_measurement(request: Request, req: QRScanMeasurementRequest, db: Session = Depends(get_db)):
     """
     Inspector scans a sign's QR with the phone, the app extracts asset_id
     from the payload, and we log a measurement in one round-trip — no
