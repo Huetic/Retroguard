@@ -1,0 +1,128 @@
+"""
+Layer 4 infrastructure: contributor catalog + API key auth dependency.
+
+- Staff routes under /api/contributors manage contributor records and issue keys.
+- Public routes elsewhere (/api/contribute/*) use `require_contributor` to
+  look up the key from the X-API-Key header and attach the Contributor to
+  the request.
+"""
+from __future__ import annotations
+
+import secrets
+from datetime import datetime
+from typing import List
+
+from fastapi import APIRouter, Depends, Header, HTTPException
+from sqlalchemy.orm import Session
+
+from database import get_db
+from models import Contributor
+from schemas import (
+    ContributorCreate,
+    ContributorResponse,
+    ContributorUpdate,
+    ContributorWithKey,
+)
+
+router = APIRouter(prefix="/api/contributors", tags=["Contributors"])
+
+
+def _new_key() -> str:
+    return f"rg_{secrets.token_urlsafe(32)}"
+
+
+def require_contributor(
+    x_api_key: str = Header(..., alias="X-API-Key"),
+    db: Session = Depends(get_db),
+) -> Contributor:
+    """
+    Dependency for public contribute endpoints. Looks up the API key,
+    rejects inactive or unknown keys, bumps last_used_at.
+    """
+    c = db.query(Contributor).filter(Contributor.api_key == x_api_key).first()
+    if not c:
+        raise HTTPException(401, "Invalid API key")
+    if not c.active:
+        raise HTTPException(403, "This contributor key has been revoked")
+    c.last_used_at = datetime.utcnow()
+    db.commit()
+    return c
+
+
+@router.get("", response_model=List[ContributorResponse])
+def list_contributors(db: Session = Depends(get_db)):
+    return db.query(Contributor).order_by(Contributor.id.desc()).all()
+
+
+@router.post("", response_model=ContributorWithKey, status_code=201)
+def create_contributor(payload: ContributorCreate, db: Session = Depends(get_db)):
+    """Create a new contributor. The API key is returned ONCE here only."""
+    c = Contributor(
+        name=payload.name,
+        contributor_type=payload.contributor_type,
+        trust_level=payload.trust_level,
+        contact_email=payload.contact_email,
+        notes=payload.notes,
+        api_key=_new_key(),
+        active=True,
+    )
+    db.add(c)
+    db.commit()
+    db.refresh(c)
+    # Return the api_key exactly once
+    return ContributorWithKey(
+        id=c.id,
+        name=c.name,
+        contributor_type=c.contributor_type,
+        trust_level=c.trust_level,
+        contact_email=c.contact_email,
+        notes=c.notes,
+        active=c.active,
+        created_at=c.created_at,
+        last_used_at=c.last_used_at,
+        api_key=c.api_key,
+    )
+
+
+@router.put("/{cid}", response_model=ContributorResponse)
+def update_contributor(cid: int, payload: ContributorUpdate, db: Session = Depends(get_db)):
+    c = db.query(Contributor).filter(Contributor.id == cid).first()
+    if not c:
+        raise HTTPException(404, "Contributor not found")
+    for k, v in payload.model_dump(exclude_unset=True).items():
+        setattr(c, k, v)
+    db.commit()
+    db.refresh(c)
+    return c
+
+
+@router.post("/{cid}/rotate-key", response_model=ContributorWithKey)
+def rotate_key(cid: int, db: Session = Depends(get_db)):
+    """Issue a fresh API key, invalidating the old one."""
+    c = db.query(Contributor).filter(Contributor.id == cid).first()
+    if not c:
+        raise HTTPException(404, "Contributor not found")
+    c.api_key = _new_key()
+    db.commit()
+    db.refresh(c)
+    return ContributorWithKey(
+        id=c.id,
+        name=c.name,
+        contributor_type=c.contributor_type,
+        trust_level=c.trust_level,
+        contact_email=c.contact_email,
+        notes=c.notes,
+        active=c.active,
+        created_at=c.created_at,
+        last_used_at=c.last_used_at,
+        api_key=c.api_key,
+    )
+
+
+@router.delete("/{cid}", status_code=204)
+def delete_contributor(cid: int, db: Session = Depends(get_db)):
+    c = db.query(Contributor).filter(Contributor.id == cid).first()
+    if not c:
+        raise HTTPException(404, "Contributor not found")
+    db.delete(c)
+    db.commit()

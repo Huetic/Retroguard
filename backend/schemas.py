@@ -225,6 +225,45 @@ class PredictionResponse(BaseModel):
 
 # ── Ingestion jobs ──────────────────────────────────────────────────────────
 
+# ── Contributors (Layer 4 crowdsourced) ─────────────────────────────────────
+
+class ContributorCreate(BaseModel):
+    name: str
+    contributor_type: str = Field(default="fleet", pattern="^(fleet|civic|individual|partner)$")
+    trust_level: float = Field(default=0.5, ge=0.0, le=1.0)
+    contact_email: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class ContributorUpdate(BaseModel):
+    name: Optional[str] = None
+    contributor_type: Optional[str] = Field(default=None, pattern="^(fleet|civic|individual|partner)$")
+    trust_level: Optional[float] = Field(default=None, ge=0.0, le=1.0)
+    contact_email: Optional[str] = None
+    notes: Optional[str] = None
+    active: Optional[bool] = None
+
+
+class ContributorResponse(BaseModel):
+    id: int
+    name: str
+    contributor_type: str
+    trust_level: float
+    contact_email: Optional[str]
+    notes: Optional[str]
+    active: bool
+    created_at: datetime
+    last_used_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+class ContributorWithKey(ContributorResponse):
+    """Returned ONCE on create — api_key is never exposed again."""
+    api_key: str
+
+
 # ── Reference patches (Layer 3) ─────────────────────────────────────────────
 
 class ReferencePatchBase(BaseModel):
@@ -292,6 +331,7 @@ class JobRunResponse(BaseModel):
     source_type: str
     status: str
     asset_id: Optional[int]
+    contributor_id: Optional[int] = None
     measurements_created: int
     params_json: Optional[str]
     result_json: Optional[str]

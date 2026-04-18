@@ -98,7 +98,32 @@ Branch: `feat/complete-backend` → PR #1
 2. Auto-detect patches in images (vision task) — currently the operator supplies brightness manually.
 3. Seasonal patch recertification reminder (patches themselves degrade over years).
 
-## 7. Summary of what's safe to demo
+## 7. Layer 4 — Crowdsourced dashcam (backend + UI done)
+
+| Change | Tested? | Result |
+|---|---|---|
+| `Contributor` model (name, contributor_type, api_key, trust_level, active, last_used_at) | Yes | Pass |
+| API key auth dependency (`require_contributor`) reading `X-API-Key` header | Yes (curl) | Pass — bogus key → 401, valid key → accepted |
+| `/api/contributors` staff CRUD + `rotate-key` endpoint | Yes (curl) | Pass — key returned once on create/rotate, never again |
+| `POST /api/contribute/video` — public, API-key gated, reuses async JobRun pipeline | Yes (curl) | Pass (job id=2 processed, 6 measurements created) |
+| `Measurement.contributor_id` FK + trust-level confidence weighting | Yes (curl) | Pass — confidence 0.608 × trust 0.7 = 0.426 persisted |
+| `JobRun.contributor_id` FK — attribution on every ingestion | Yes (curl) | Pass |
+| Postgres schema migration (added `contributor_id` columns via ALTER TABLE) | Yes | Pass |
+| Frontend `/contributors` page — CRUD + issue/rotate keys modal + key-shown-once flow | Built | Renders; CRUD exercised via backend |
+| Sidebar: "Contributors" under Data | Built | Visible |
+
+**Architectural notes:**
+- Staff `/api/ingest/video` (full trust) and public `/api/contribute/video` (keyed, weighted) share the same async `JobRun` pipeline — zero code duplication.
+- API key is only returned on create/rotate. Operator must save it then; the DB never exposes it again via list/get endpoints.
+- `trust_level` multiplier applies at measurement confidence write time, so downstream aggregation (avg R_L, predict_degradation) can weight by `confidence` and get trust-aware results for free.
+
+**Outstanding work on Layer 4:**
+1. Rate limiting per API key (none yet — a fleet could spam).
+2. Moderation queue before measurements hit the main asset — currently trusted directly.
+3. Public-facing contributor onboarding flow (self-serve signup, not staff-issued).
+4. Hash the API key at rest instead of storing plaintext (if we ever share the DB).
+
+## 8. Summary of what's safe to demo
 
 - Dashboard overview with real counts (`/`)
 - Asset registry with Import / Add / Export / Refresh (`/assets`)
@@ -107,7 +132,7 @@ Branch: `feat/complete-backend` → PR #1
 - PDF/Excel report downloads
 - QR code generation for individual assets
 
-## 8. What to flag as "not demo-ready"
+## 9. What to flag as "not demo-ready"
 
 - Layer 2 video ingestion (untested on real footage, no UI)
 - "Hi, Madhav" greeting, calendar, workload heatmap on `/` (still placeholder)

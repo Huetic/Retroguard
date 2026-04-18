@@ -101,6 +101,22 @@ export interface ApiAlertSummary {
   total: number;
 }
 
+export interface ApiContributor {
+  id: number;
+  name: string;
+  contributor_type: string;
+  trust_level: number;
+  contact_email: string | null;
+  notes: string | null;
+  active: boolean;
+  created_at: string;
+  last_used_at: string | null;
+}
+
+export interface ApiContributorWithKey extends ApiContributor {
+  api_key: string;
+}
+
 export interface ApiReferencePatch {
   id: number;
   label: string;
@@ -552,6 +568,41 @@ export const api = {
     const res = await fetch(`${API_BASE}/api/patches/${id}`, { method: "DELETE" });
     if (!res.ok) throw new ApiError(`delete patch → ${res.status}`, res.status);
   },
+  // Contributors (Layer 4)
+  listContributors: () =>
+    fetchJson<ApiContributor[]>(`/api/contributors`),
+  createContributor: (p: {
+    name: string;
+    contributor_type: "fleet" | "civic" | "individual" | "partner";
+    trust_level?: number;
+    contact_email?: string | null;
+    notes?: string | null;
+  }) =>
+    fetchJson<ApiContributorWithKey>(`/api/contributors`, {
+      method: "POST",
+      body: JSON.stringify(p),
+    }),
+  updateContributor: (id: number, p: Partial<{
+    name: string;
+    contributor_type: string;
+    trust_level: number;
+    contact_email: string | null;
+    notes: string | null;
+    active: boolean;
+  }>) =>
+    fetchJson<ApiContributor>(`/api/contributors/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(p),
+    }),
+  rotateContributorKey: (id: number) =>
+    fetchJson<ApiContributorWithKey>(`/api/contributors/${id}/rotate-key`, {
+      method: "POST",
+    }),
+  deleteContributor: async (id: number) => {
+    const res = await fetch(`${API_BASE}/api/contributors/${id}`, { method: "DELETE" });
+    if (!res.ok) throw new ApiError(`delete contributor → ${res.status}`, res.status);
+  },
+
   calibratedRL: (payload: {
     sign_brightness: number;
     patch_brightness: number;

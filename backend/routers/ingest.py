@@ -52,6 +52,8 @@ def _process_video_job(
     max_frames: int,
     distance: float,
     angle: float,
+    contributor_id: Optional[int] = None,
+    trust_level: float = 1.0,
 ) -> None:
     """
     Runs in a background task. Owns its own DB session because the original
@@ -99,17 +101,19 @@ def _process_video_job(
             m = Measurement(
                 asset_id=asset_id,
                 rl_value=est["rl_value"],
-                confidence=est["confidence"],
+                confidence=est["confidence"] * trust_level,  # trust-weighted
                 source_layer=source_layer,
                 conditions_json=json.dumps({
                     "brightness": est["brightness"],
                     "frame_idx": f["frame_idx"],
                     "timestamp_s": f["timestamp_s"],
                     "job_id": job_id,
+                    "trust_level": trust_level,
                 }),
                 device_info=f"video_ingest:{source_layer}",
                 image_path=str(Path(video_path).name),
                 measured_at=base_ts,
+                contributor_id=contributor_id,
             )
             db.add(m)
             rl_values.append(est["rl_value"])
@@ -225,4 +229,74 @@ def get_job(job_id: int, db: Session = Depends(get_db)):
     job = db.query(JobRun).filter(JobRun.id == job_id).first()
     if not job:
         raise HTTPException(404, "Job not found")
+    return job
+
+
+# ── Layer 4: public contribution endpoint (API-key gated) ──────────────────
+
+# Separate sub-router so it mounts under /api/contribute/* without disturbing
+# the internal /api/ingest/* surface.
+contribute_router = APIRouter(prefix="/api/contribute", tags=["Contribute (public)"])
+
+
+@contribute_router.post("/video", response_model=JobRunResponse, status_code=202)
+async def contribute_video(
+    background_tasks: BackgroundTasks,
+    asset_id: int = Form(...),
+    every_n_seconds: float = Form(2.0),
+    max_frames: int = Form(30),
+    distance: float = Form(30.0),
+    angle: float = Form(0.2),
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    contributor=Depends(__import__("routers.contributors", fromlist=["require_contributor"]).require_contributor),
+):
+    """
+    Public Layer 4 endpoint. Requires an X-API-Key header identifying an
+    active contributor. Measurements derived from the upload are tagged
+    with the contributor and confidence-weighted by trust_level.
+    """
+    asset = db.query(HighwayAsset).filter(HighwayAsset.id == asset_id).first()
+    if not asset:
+        raise HTTPException(404, "Asset not found")
+
+    saved = _save_upload(file)
+    params = {
+        "video_path": str(saved),
+        "asset_id": asset_id,
+        "source_layer": "dashcam",
+        "every_n_seconds": every_n_seconds,
+        "max_frames": max_frames,
+        "distance": distance,
+        "angle": angle,
+        "contributor_id": contributor.id,
+        "contributor_name": contributor.name,
+        "trust_level": contributor.trust_level,
+        "original_filename": file.filename,
+    }
+    job = JobRun(
+        source_type="dashcam",
+        status="queued",
+        params_json=json.dumps(params),
+        asset_id=asset_id,
+        contributor_id=contributor.id,
+    )
+    db.add(job)
+    db.commit()
+    db.refresh(job)
+
+    background_tasks.add_task(
+        _process_video_job,
+        job_id=job.id,
+        video_path=str(saved),
+        asset_id=asset_id,
+        source_layer="dashcam",
+        every_n_seconds=every_n_seconds,
+        max_frames=max_frames,
+        distance=distance,
+        angle=angle,
+        contributor_id=contributor.id,
+        trust_level=contributor.trust_level,
+    )
+
     return job

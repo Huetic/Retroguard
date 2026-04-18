@@ -43,6 +43,7 @@ class Measurement(Base):
     device_info = Column(String(200), nullable=True)
     measured_at = Column(DateTime, default=datetime.utcnow, index=True)
     image_path = Column(String(500), nullable=True)
+    contributor_id = Column(Integer, ForeignKey("contributors.id"), nullable=True, index=True)
 
     asset = relationship("HighwayAsset", back_populates="measurements")
 
@@ -74,6 +75,26 @@ class MaintenanceOrder(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     asset = relationship("HighwayAsset", back_populates="maintenance_orders")
+
+
+class Contributor(Base):
+    """
+    Layer 4: external organizations/individuals contributing dashcam data
+    through the public /api/contribute/* endpoints via API key.
+    """
+    __tablename__ = "contributors"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(200), nullable=False)
+    contributor_type = Column(String(30), nullable=False, default="fleet")
+    # ^ fleet / civic / individual / partner
+    api_key = Column(String(64), nullable=False, unique=True, index=True)
+    trust_level = Column(Float, nullable=False, default=0.5)  # 0.0 – 1.0
+    contact_email = Column(String(200), nullable=True)
+    notes = Column(Text, nullable=True)
+    active = Column(Boolean, default=True, index=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    last_used_at = Column(DateTime, nullable=True)
 
 
 class ReferencePatch(Base):
@@ -114,6 +135,7 @@ class JobRun(Base):
     result_json = Column(Text, nullable=True)      # json of the final result (counts, etc.)
     error = Column(Text, nullable=True)
     asset_id = Column(Integer, ForeignKey("highway_assets.id"), nullable=True, index=True)
+    contributor_id = Column(Integer, ForeignKey("contributors.id"), nullable=True, index=True)
     measurements_created = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     started_at = Column(DateTime, nullable=True)
