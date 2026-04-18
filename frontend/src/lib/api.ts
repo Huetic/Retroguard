@@ -440,6 +440,11 @@ export const api = {
     created: number;
     skipped: number;
     errors: { row: number; reason: string }[];
+    duplicates: {
+      row: number;
+      matched_asset_id: number | null;
+      data: Record<string, unknown>;
+    }[];
   }> {
     const fd = new FormData();
     fd.append("file", file);
@@ -453,6 +458,15 @@ export const api = {
       throw new ApiError(`import → ${res.status}${detail ? ` · ${detail}` : ""}`, res.status);
     }
     return res.json();
+  },
+  async forceImportAssets(rows: Record<string, unknown>[]): Promise<{
+    created: number;
+    ids: number[];
+  }> {
+    return fetchJson(`/api/assets/import/force`, {
+      method: "POST",
+      body: JSON.stringify(rows),
+    });
   },
   assetImportTemplateUrl: () => `${API_BASE}/api/assets/import/template`,
 

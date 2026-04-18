@@ -27,6 +27,49 @@ CSV_COLUMNS = [
     "irc_minimum_rl",
 ]
 
+CSV_TEMPLATE_ROWS = [
+    [
+        "sign", "NH-48", "234.500", "21.1700", "72.8311",
+        "high_intensity", "2022-07-15", "left", "250",
+    ],
+    [
+        "marking", "NH-48", "235.100", "21.1720", "72.8320",
+        "thermoplastic", "2023-01-10", "", "150",
+    ],
+    [
+        "sign", "NH-44", "102.250", "28.6139", "77.2090",
+        "green_guide_prismatic", "2021-11-04", "overhead", "250",
+    ],
+    [
+        "sign", "NH-27", "418.750", "26.9124", "75.7873",
+        "yellow_warning_prismatic", "2020-08-21", "right", "250",
+    ],
+    [
+        "rpm", "NH-66", "67.400", "15.2993", "74.1240",
+        "ceramic_marker", "2023-06-18", "median", "100",
+    ],
+    [
+        "delineator", "NH-44", "540.900", "17.3850", "78.4867",
+        "high_intensity", "2022-02-12", "left", "120",
+    ],
+    [
+        "marking", "DME", "12.600", "28.4595", "77.0266",
+        "cold_plastic", "2024-03-09", "", "150",
+    ],
+    [
+        "sign", "DME", "19.850", "28.5355", "77.3910",
+        "high_intensity", "2023-09-25", "left", "250",
+    ],
+    [
+        "rpm", "NH-27", "422.300", "26.8467", "80.9462",
+        "raised_pavement_marker", "2022-12-02", "right", "100",
+    ],
+    [
+        "delineator", "NH-66", "71.050", "15.4909", "73.8278",
+        "standard_reflector", "2024-01-16", "median", "120",
+    ],
+]
+
 
 @router.get("", response_model=List[AssetResponse])
 def list_assets(
@@ -118,18 +161,11 @@ def create_asset(payload: AssetCreate, db: Session = Depends(get_db)):
 
 @router.get("/import/template")
 def import_template():
-    """Download a CSV template — blank headers + 2 example rows."""
+    """Download a CSV template with placeholder rows for import testing."""
     buf = io.StringIO()
     w = csv.writer(buf)
     w.writerow(CSV_COLUMNS)
-    w.writerow([
-        "sign", "NH-48", "234.5", "21.1700", "72.8311",
-        "high_intensity", "2022-07-15", "left", "250",
-    ])
-    w.writerow([
-        "marking", "NH-48", "235.1", "21.1720", "72.8320",
-        "standard", "2023-01-10", "", "150",
-    ])
+    w.writerows(CSV_TEMPLATE_ROWS)
     return Response(
         buf.getvalue(),
         media_type="text/csv",
@@ -177,6 +213,26 @@ def _parse_row(row: dict) -> dict:
     }
 
 
+def _find_duplicate(db: Session, data: dict):
+    """
+    Returns the matching HighwayAsset if one already exists with same
+    (highway_id, asset_type) and chainage_km within ~10m (0.01 km), else None.
+    """
+    from sqlalchemy import and_
+    return (
+        db.query(HighwayAsset)
+        .filter(
+            and_(
+                HighwayAsset.highway_id == data["highway_id"],
+                HighwayAsset.asset_type == data["asset_type"],
+                HighwayAsset.chainage_km >= data["chainage_km"] - 0.01,
+                HighwayAsset.chainage_km <= data["chainage_km"] + 0.01,
+            )
+        )
+        .first()
+    )
+
+
 @router.post("/import")
 async def import_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
     """
@@ -186,15 +242,22 @@ async def import_csv(file: UploadFile = File(...), db: Session = Depends(get_db)
     material_grade, installation_date (YYYY-MM-DD, optional), orientation
     (optional), irc_minimum_rl.
 
-    Returns {created, skipped, errors:[{row, reason}]}. Rows with errors
-    do NOT block other rows — valid rows still get inserted.
+    Response:
+      - created:    int (successfully inserted)
+      - skipped:    int (errors + duplicates combined count)
+      - errors:     [{row, reason}]   — malformed rows
+      - duplicates: [{row, data, matched_asset_id}]
+                    — rows that matched an existing asset (same highway +
+                    type + chainage within 10m). Not inserted. Frontend
+                    can let the user review and force-insert via
+                    POST /api/assets/import/force.
     """
     if not (file.filename or "").lower().endswith(".csv"):
         raise HTTPException(400, "Expected a .csv file")
 
     raw = await file.read()
     try:
-        text = raw.decode("utf-8-sig")  # strips BOM if present
+        text = raw.decode("utf-8-sig")
     except UnicodeDecodeError:
         raise HTTPException(400, "CSV must be UTF-8 encoded")
 
@@ -206,17 +269,65 @@ async def import_csv(file: UploadFile = File(...), db: Session = Depends(get_db)
         )
 
     created = 0
-    skipped = 0
     errors: list = []
+    duplicates: list = []
+    # Track pending inserts in this batch so CSV-internal duplicates are caught too
+    batch_keys: set = set()
 
-    for idx, row in enumerate(reader, start=2):  # header is row 1
+    for idx, row in enumerate(reader, start=2):
         try:
             data = _parse_row(row)
-            db.add(HighwayAsset(**data))
-            created += 1
         except ValueError as e:
-            skipped += 1
             errors.append({"row": idx, "reason": str(e)})
+            continue
+
+        key = (
+            data["highway_id"],
+            data["asset_type"],
+            round(data["chainage_km"], 2),
+        )
+
+        existing = _find_duplicate(db, data)
+        if existing is not None:
+            duplicates.append({
+                "row": idx,
+                "matched_asset_id": existing.id,
+                "data": {k: (v.isoformat() if hasattr(v, "isoformat") else v)
+                         for k, v in data.items()},
+            })
+            continue
+        if key in batch_keys:
+            duplicates.append({
+                "row": idx,
+                "matched_asset_id": None,  # in-file duplicate, not DB
+                "data": {k: (v.isoformat() if hasattr(v, "isoformat") else v)
+                         for k, v in data.items()},
+            })
+            continue
+
+        batch_keys.add(key)
+        db.add(HighwayAsset(**data))
+        created += 1
 
     db.commit()
-    return {"created": created, "skipped": skipped, "errors": errors[:50]}
+    return {
+        "created": created,
+        "skipped": len(errors) + len(duplicates),
+        "errors": errors[:50],
+        "duplicates": duplicates[:100],
+    }
+
+
+@router.post("/import/force")
+def import_force(payload: List[AssetCreate], db: Session = Depends(get_db)):
+    """
+    Force-insert rows that the normal /import flagged as duplicates.
+    Bypasses the duplicate check — use only when the operator has
+    confirmed these are genuinely distinct assets.
+    """
+    created = [HighwayAsset(**r.model_dump()) for r in payload]
+    db.add_all(created)
+    db.commit()
+    for a in created:
+        db.refresh(a)
+    return {"created": len(created), "ids": [a.id for a in created]}

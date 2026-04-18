@@ -15,6 +15,7 @@ import {
   Upload,
   X,
   FileSpreadsheet,
+  RefreshCw,
 } from "lucide-react";
 import TopBar from "../../components/TopBar";
 import { api, useApi, type UiAsset } from "../../lib/api";
@@ -139,6 +140,14 @@ export default function AssetsPage() {
             <StatusPill count={counts.warning} label="Warning" tone="caution" />
             <StatusPill count={counts.critical} label="Critical" tone="alarm" />
             <div className="w-px h-7 bg-ink/10 mx-1" />
+            <button
+              onClick={() => refetch()}
+              title="Refresh"
+              className="pill bg-paper/60 border border-ink/5 hover:bg-paper text-ink/75 gap-2"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} strokeWidth={1.8} />
+              Refresh
+            </button>
             <button
               onClick={() => setShowImport(true)}
               className="pill bg-paper/60 border border-ink/5 hover:bg-paper text-ink/75 gap-2"
@@ -579,8 +588,15 @@ function ImportCsvModal({
     created: number;
     skipped: number;
     errors: { row: number; reason: string }[];
+    duplicates: {
+      row: number;
+      matched_asset_id: number | null;
+      data: Record<string, unknown>;
+    }[];
   } | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [dupSelected, setDupSelected] = useState<Set<number>>(new Set());
+  const [forcing, setForcing] = useState(false);
 
   const submit = async () => {
     if (!file) return;
@@ -589,10 +605,43 @@ function ImportCsvModal({
     try {
       const res = await api.importAssetsCsv(file);
       setResult(res);
+      setDupSelected(new Set());
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const toggleDup = (row: number) => {
+    setDupSelected((s) => {
+      const next = new Set(s);
+      if (next.has(row)) next.delete(row);
+      else next.add(row);
+      return next;
+    });
+  };
+
+  const forceInsertSelected = async () => {
+    if (!result || dupSelected.size === 0) return;
+    setForcing(true);
+    setErr(null);
+    try {
+      const rows = result.duplicates
+        .filter((d) => dupSelected.has(d.row))
+        .map((d) => d.data);
+      const res = await api.forceImportAssets(rows);
+      // Update result locally so the UI reflects success
+      setResult({
+        ...result,
+        created: result.created + res.created,
+        duplicates: result.duplicates.filter((d) => !dupSelected.has(d.row)),
+      });
+      setDupSelected(new Set());
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setForcing(false);
     }
   };
 
@@ -643,14 +692,71 @@ function ImportCsvModal({
         </>
       ) : (
         <>
-          <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-center gap-3 mb-4">
             <StatBlock label="Created" value={result.created} tone="go" />
-            <StatBlock label="Skipped" value={result.skipped} tone="caution" />
+            <StatBlock label="Duplicates" value={result.duplicates.length} tone="caution" />
+            <StatBlock label="Errors" value={result.errors.length} tone="caution" />
           </div>
+
+          {result.duplicates.length > 0 && (
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-[12px] text-ink/70 font-medium">
+                  Duplicates — review and override if needed
+                </div>
+                <button
+                  onClick={forceInsertSelected}
+                  disabled={dupSelected.size === 0 || forcing}
+                  className="pill text-white text-[11px] font-medium disabled:opacity-40"
+                  style={{ background: "linear-gradient(135deg, #FF8B5A, #E85A26)" }}
+                >
+                  {forcing
+                    ? "Inserting…"
+                    : `Insert selected (${dupSelected.size})`}
+                </button>
+              </div>
+              <div className="max-h-[240px] overflow-y-auto border border-ink/10 rounded-lg divide-y divide-ink/5">
+                {result.duplicates.map((d) => (
+                  <label
+                    key={d.row}
+                    className="flex items-start gap-2 px-3 py-2 text-[12px] cursor-pointer hover:bg-paper/40"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={dupSelected.has(d.row)}
+                      onChange={() => toggleDup(d.row)}
+                      className="mt-0.5"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-ink/60">row {d.row}</span>
+                        {d.matched_asset_id !== null ? (
+                          <span className="text-ink/60">
+                            matches existing asset{" "}
+                            <span className="font-mono">#{d.matched_asset_id}</span>
+                          </span>
+                        ) : (
+                          <span className="text-ink/60">duplicate within file</span>
+                        )}
+                      </div>
+                      <div className="text-[11px] text-ink/50 truncate">
+                        {String(d.data.asset_type)} · {String(d.data.highway_id)} · km{" "}
+                        {String(d.data.chainage_km)}
+                      </div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+              <div className="mt-2 text-[10.5px] text-ink/45">
+                Tick a row only if you&rsquo;re sure it&rsquo;s a separate physical asset.
+              </div>
+            </div>
+          )}
+
           {result.errors.length > 0 && (
             <>
               <div className="text-[12px] text-ink/70 mb-2 font-medium">Row errors</div>
-              <div className="max-h-[200px] overflow-y-auto border border-ink/10 rounded-lg divide-y divide-ink/5">
+              <div className="max-h-[160px] overflow-y-auto border border-ink/10 rounded-lg divide-y divide-ink/5">
                 {result.errors.map((e) => (
                   <div key={e.row} className="px-3 py-2 text-[12px]">
                     <span className="font-mono text-ink/60">row {e.row}</span>
@@ -660,6 +766,9 @@ function ImportCsvModal({
               </div>
             </>
           )}
+
+          {err && <div className="mt-3 text-[12px] text-alarm">{err}</div>}
+
           <div className="mt-5 flex items-center justify-end">
             <button
               onClick={onImported}
