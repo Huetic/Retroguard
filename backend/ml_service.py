@@ -116,38 +116,53 @@ def estimate_rl_from_image(
 
 # ── Sign detection ──────────────────────────────────────────────────────────
 
+def _normalize_detection(d: Dict[str, Any]) -> Dict[str, Any]:
+    """ml/scripts/detect_signs.py returns {bbox:(x,y,w,h), class_name, confidence, ...}
+    Normalize to {class, confidence, bbox:[x1,y1,x2,y2]} for the API."""
+    b = d.get("bbox") or [0, 0, 0, 0]
+    if len(b) == 4:
+        x, y, w, h = b
+        bbox = [float(x), float(y), float(x + w), float(y + h)]
+    else:
+        bbox = [float(v) for v in b]
+    return {
+        "class": d.get("class_name") or d.get("class") or "Unknown",
+        "confidence": float(d.get("confidence", 0.0)),
+        "bbox": bbox,
+    }
+
+
 def detect_signs_in_image(
     image_path: Optional[str] = None,
     width: int = 1280,
     height: int = 720,
 ) -> List[Dict[str, Any]]:
     """Return a list of detections. Uses YOLO when available, else simulation."""
+    raw: List[Dict[str, Any]] = []
     if _HAS_DETECT and image_path and cv2 is not None:
         try:
             img = cv2.imread(image_path)
             if img is not None:
-                return list(detect_retroreflective_assets(img))
+                raw = list(detect_retroreflective_assets(img))
         except Exception:
-            pass
+            raw = []
 
-    if _HAS_DETECT:
-        return list(_simulate_detections(width, height, n_objects=random.randint(3, 7)))
+    if not raw and _HAS_DETECT:
+        raw = list(_simulate_detections(width, height, n_detections=random.randint(3, 7)))
 
-    # Minimal fallback
-    categories = ["Regulatory Sign", "Warning Sign", "Pavement Marking", "Delineator"]
-    out = []
-    for i in range(random.randint(3, 6)):
-        cat = random.choice(categories)
-        x = random.randint(0, width - 200)
-        y = random.randint(0, height - 200)
-        out.append(
-            {
-                "class": cat,
+    if not raw:
+        categories = ["Regulatory Sign", "Warning Sign", "Pavement Marking", "Delineator"]
+        for _ in range(random.randint(3, 6)):
+            cat = random.choice(categories)
+            x = random.randint(0, width - 200)
+            y = random.randint(0, height - 200)
+            raw.append({
+                "class_name": cat,
                 "confidence": round(random.uniform(0.6, 0.95), 3),
-                "bbox": [x, y, x + 180, y + 180],
-            }
-        )
-    return out
+                "bbox": (x, y, 180, 180),
+            })
+
+    return [_normalize_detection(d) for d in raw]
 
 
 # ── Degradation prediction ──────────────────────────────────────────────────
