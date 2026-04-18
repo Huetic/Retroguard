@@ -28,11 +28,15 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
-    db = SessionLocal()
-    try:
-        seed(db)
-    finally:
-        db.close()
+    # Toggle: set SEED_DEMO=0 in backend/.env to start with an empty DB.
+    # Default is ON so first-time contributors still see a populated demo.
+    import os
+    if os.getenv("SEED_DEMO", "1") != "0":
+        db = SessionLocal()
+        try:
+            seed(db)
+        finally:
+            db.close()
     yield
 
 
