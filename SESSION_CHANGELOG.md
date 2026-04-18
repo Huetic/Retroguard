@@ -7,6 +7,54 @@ Branch: `feat/complete-backend` → PR #1
 
 ---
 
+## 12. Release-blocker push (parallelised via subagents)
+
+Nine subagents across five waves. See individual sections below for per-item
+detail; this is the consolidated view.
+
+| Wave | Items | Tested? | Result |
+|---|---|---|---|
+| 1 — parallel | Backend Dockerfile · Frontend Dockerfile · GitHub Actions CI · SHA-256 hashed contributor API keys | Yes (image builds + CI dry-run + curl) | Pass |
+| 2 — serial | Alembic scaffold + baseline · pytest + 8 unit tests · CORS-from-env + real `/health` + JSON logs · slowapi rate limit + JobRun janitor | Yes (py_compile + 8 passing tests + live uvicorn boot) | Pass |
+| 3 — parallel | Storage abstraction (`backend/storage.py`) · full-stack `docker-compose.yml` · 17 router integration tests | Yes (FastAPI TestClient + yaml validator; 25 tests total) | Pass |
+| 4 — serial | Runtime migrations: replaced `Base.metadata.create_all` with programmatic `alembic upgrade head` in lifespan | Yes (25 tests still pass on SQLite) | Pass |
+| 5 — chain | JWT staff auth + role gating + admin UI + CSRF N/A doc | Yes (36 tests passing + `npx tsc --noEmit` clean) | Pass |
+
+**Concrete artefacts added:**
+- `backend/Dockerfile`, `frontend/Dockerfile`, `docker-compose.yml` (full stack with db + backend + frontend + healthchecks)
+- `.github/workflows/ci.yml` (parallel backend py_compile + frontend tsc + next build)
+- `backend/alembic/` scaffold + baseline revision (8 tables, 31 indexes) + `20260418_0002_add_users` revision
+- `backend/migrations/001_hash_api_keys.sql` (manual Postgres migration for hashing existing keys)
+- `backend/storage.py` — `Storage` protocol + `FilesystemStorage`; all 4 upload paths route through it
+- `backend/rate_limit.py` (slowapi, X-API-Key → IP fallback), `backend/janitor.py` (stuck-job sweeper)
+- `backend/auth.py` (bcrypt + python-jose, `get_current_user`, `require_role`), `backend/routers/auth.py`, `backend/routers/users.py`
+- `backend/tests/test_predict_degradation.py` (8) + `test_assets.py` / `test_contributors.py` / `test_qr.py` (17) + `test_auth.py` / `test_roles.py` (11) = **36 tests**
+- Frontend: `src/lib/auth.ts` + `AuthProvider.tsx`, `AuthGuard.tsx`, `/login`, `/admin`, sidebar + topbar wiring
+
+**Defaults + bootstrap:**
+- First boot with empty `users` table seeds `admin/admin` with a WARNING in the JSON log.
+- `CORS_ALLOWED_ORIGINS` defaults to `http://localhost:3000,http://localhost:3005` when env unset.
+- `DATABASE_URL` unset → SQLite fallback.
+- `SEED_DEMO=0` keeps DB empty on boot (demo seed otherwise populates 200 assets).
+
+**Hardened endpoints now require auth:**
+- Staff `/api/*` GETs → any authenticated user (inspector+)
+- Asset writes / patches writes / maintenance writes → supervisor+
+- User CRUD (`/api/users`) → admin only
+- `/api/contributors` (key issuance + rotation + delete) → admin only
+- `/api/contribute/*` unchanged — still uses X-API-Key (contributor auth is distinct from staff auth)
+- Rate limits: `contribute/video` 5/min · `qr/decode` 20/min · `qr/scan-measurement` 30/min
+
+**Still open (see TODO.md):**
+- Durable job queue (Celery/RQ) — BackgroundTasks dies with process; janitor heals on restart but doesn't prevent the outage
+- Object storage backend (abstraction is in place, only filesystem impl exists)
+- Secret manager (DATABASE_URL + JWT_SECRET still in env)
+- Audit log table for every write op
+- NHAI-specific compliance (MeghRaj, WCAG, i18n, PII blurring)
+- ML real-world validation
+
+---
+
 ## 1. Backend foundation (completed)
 
 | Change | Tested? | Result |
