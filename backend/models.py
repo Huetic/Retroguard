@@ -121,6 +121,27 @@ class ReferencePatch(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
+class Forecast(Base):
+    """
+    Layer 5: a snapshot of a degradation forecast for an asset, saved so
+    we can see how predictions evolved over time (accuracy tracking) and
+    serve the risk-register fleet view without recomputing every request.
+    """
+    __tablename__ = "forecasts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    asset_id = Column(Integer, ForeignKey("highway_assets.id"), nullable=False, index=True)
+    rl_0 = Column(Float, nullable=True)
+    lambda_adjusted = Column(Float, nullable=True)
+    days_to_failure = Column(Float, nullable=True, index=True)
+    predicted_failure_date = Column(DateTime, nullable=True, index=True)
+    recommended_maintenance_date = Column(DateTime, nullable=True)
+    confidence_low_days = Column(Float, nullable=True)
+    confidence_high_days = Column(Float, nullable=True)
+    model_version = Column(String(40), nullable=False, default="exp-decay-multifactor-v1")
+    computed_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+
 class JobRun(Base):
     """
     Tracks every background ingestion job (video uploads, bulk imports, etc.).

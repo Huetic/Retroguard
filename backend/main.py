@@ -15,13 +15,13 @@ from fastapi.staticfiles import StaticFiles
 from database import engine, SessionLocal, Base
 from models import (  # noqa: F401 — ensure tables registered
     HighwayAsset, Measurement, Alert, MaintenanceOrder,
-    JobRun, ReferencePatch, Contributor,
+    JobRun, ReferencePatch, Contributor, Forecast,
 )
 from seed_data import seed
 
 from routers import (
     assets, measurements, alerts, dashboard, reports,
-    ml, maintenance, qr, uploads, ingest, patches, contributors,
+    ml, maintenance, qr, uploads, ingest, patches, contributors, forecast,
 )
 
 UPLOAD_DIR = Path(__file__).resolve().parent / "uploads"
@@ -76,6 +76,7 @@ app.include_router(ingest.router)
 app.include_router(ingest.contribute_router)
 app.include_router(patches.router)
 app.include_router(contributors.router)
+app.include_router(forecast.router)
 
 
 @app.get("/")

@@ -223,6 +223,38 @@ class PredictionResponse(BaseModel):
     series: List[PredictionSeriesPoint]
 
 
+# ── Forecasts (Layer 5) ─────────────────────────────────────────────────────
+
+class ForecastResponse(BaseModel):
+    id: int
+    asset_id: int
+    rl_0: Optional[float]
+    lambda_adjusted: Optional[float]
+    days_to_failure: Optional[float]
+    predicted_failure_date: Optional[datetime]
+    recommended_maintenance_date: Optional[datetime]
+    confidence_low_days: Optional[float]
+    confidence_high_days: Optional[float]
+    model_version: str
+    computed_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class RiskRegisterRow(BaseModel):
+    asset_id: int
+    highway_id: str
+    chainage_km: float
+    asset_type: str
+    current_rl: Optional[float]
+    irc_minimum_rl: float
+    status: str
+    days_to_failure: Optional[float]
+    predicted_failure_date: Optional[datetime]
+    forecast_age_hours: Optional[float]  # how stale is the forecast?
+
+
 # ── Ingestion jobs ──────────────────────────────────────────────────────────
 
 # ── Contributors (Layer 4 crowdsourced) ─────────────────────────────────────

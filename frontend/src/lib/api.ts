@@ -101,6 +101,19 @@ export interface ApiAlertSummary {
   total: number;
 }
 
+export interface ApiRiskRow {
+  asset_id: number;
+  highway_id: string;
+  chainage_km: number;
+  asset_type: string;
+  current_rl: number | null;
+  irc_minimum_rl: number;
+  status: string;
+  days_to_failure: number | null;
+  predicted_failure_date: string | null;
+  forecast_age_hours: number | null;
+}
+
 export interface ApiContributor {
   id: number;
   name: string;
@@ -568,6 +581,31 @@ export const api = {
     const res = await fetch(`${API_BASE}/api/patches/${id}`, { method: "DELETE" });
     if (!res.ok) throw new ApiError(`delete patch → ${res.status}`, res.status);
   },
+  // Forecasts (Layer 5)
+  refreshForecasts: (highway_id?: string) =>
+    fetchJson<ApiJobRun>(
+      `/api/forecast/refresh${highway_id ? `?highway_id=${encodeURIComponent(highway_id)}` : ""}`,
+      { method: "POST" }
+    ),
+  riskRegister: (filters?: { highway_id?: string; within_days?: number; limit?: number }) =>
+    fetchJson<ApiRiskRow[]>(`/api/forecast/risk-register${qs(filters as Record<string, string | number | undefined>)}`),
+
+  // QR (Layer 6)
+  bulkQrPdfUrl: (highway_id?: string) =>
+    `${API_BASE}/api/qr/bulk/pdf${highway_id ? `?highway_id=${encodeURIComponent(highway_id)}` : ""}`,
+  qrScanMeasurement: (body: {
+    payload: string;
+    rl_value: number;
+    confidence?: number;
+    device_info?: string;
+  }) =>
+    fetchJson<{ measurement_id: number; asset_id: number; rl_value: number; new_status: string }>(
+      `/api/qr/scan-measurement`,
+      { method: "POST", body: JSON.stringify(body) }
+    ),
+  qrPayloadUrl: (asset_id: number) => `${API_BASE}/api/qr/${asset_id}/payload`,
+  qrImageUrl: (asset_id: number) => `${API_BASE}/api/qr/${asset_id}/image`,
+
   // Contributors (Layer 4)
   listContributors: () =>
     fetchJson<ApiContributor[]>(`/api/contributors`),

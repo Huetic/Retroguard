@@ -123,7 +123,46 @@ Branch: `feat/complete-backend` → PR #1
 3. Public-facing contributor onboarding flow (self-serve signup, not staff-issued).
 4. Hash the API key at rest instead of storing plaintext (if we ever share the DB).
 
-## 8. Summary of what's safe to demo
+## 8. Layer 5 — Predictive Digital Twin (backend + UI done)
+
+| Change | Tested? | Result |
+|---|---|---|
+| `Forecast` snapshot table (rl_0, lambda, days_to_failure, CI, model_version, computed_at) | Yes (boot + curl) | Pass |
+| `POST /api/forecast/refresh` — async bulk recompute, writes one `Forecast` row per eligible asset, reuses `JobRun` | Yes (curl) | Pass — 2 forecasts written, 28 skipped for insufficient history in ~1s |
+| `GET /api/forecast/risk-register` — latest-snapshot-per-asset + status + forecast age, sorted soonest-failure-first | Yes (curl) | Pass (0 rows under 365d since test assets only had 1 measurement each) |
+| `GET /api/forecast/{asset_id}` — history of snapshots | Implicit | Pass |
+| Auto-mirrors predicted_failure_date onto `HighwayAsset` after each compute | Yes | Pass |
+| Frontend `/forecast` page — risk register table, highway + within-days filters, one-click async refresh with live poll | Built | Renders |
+| Sidebar: "Forecast" under Operations | Built | Visible |
+
+**Architectural notes:**
+- Forecasts are persisted, not recomputed on every request — risk register view is O(assets) query, not O(assets × measurement history).
+- A `model_version` column lets us A/B new prediction models later and query only rows from the current version.
+- Reuses the same `JobRun` pipeline from Layer 2/4, so refresh jobs show up alongside ingestions in the jobs list.
+
+**Outstanding Layer 5 work:**
+1. Cron the `/forecast/refresh` endpoint so forecasts stay fresh without a human clicking.
+2. Model-accuracy backtest: compare past forecasts to actual measurements.
+3. Visual: per-asset "forecast drift over time" chart using the snapshot history.
+
+## 9. Layer 6 — Degradation-Encoding QR Codes (backend + UI done)
+
+| Change | Tested? | Result |
+|---|---|---|
+| `GET /api/qr/bulk/pdf?highway_id=...` — 12-per-A4-page printable sheet with asset ID + highway + chainage caption (reportlab) | Yes (curl) | Pass (183 KB PDF generated) |
+| `POST /api/qr/scan-measurement` — takes raw QR payload + R_L, looks up asset, logs Measurement, updates asset status | Yes (curl) | Pass (measurement #15 logged, status → critical) |
+| Frontend `/qr` page: bulk-print card, single-asset QR preview, scan simulator panel | Built | Renders |
+| Sidebar: "QR pipeline" under Operations | Built | Visible |
+
+**Architectural notes:**
+- Scan → measurement is one round-trip, matching how an inspector actually uses this in the field.
+- The raw QR string is stored in `Measurement.conditions_json` for forensic replay.
+
+**Outstanding Layer 6 work:**
+1. Server-side QR regeneration when a sign is replaced (the old printed QR becomes stale; need versioning).
+2. Tamper detection — sign metadata signed with NHAI keypair so a forged QR fails verification.
+
+## 10. Summary of what's safe to demo
 
 - Dashboard overview with real counts (`/`)
 - Asset registry with Import / Add / Export / Refresh (`/assets`)
@@ -132,7 +171,7 @@ Branch: `feat/complete-backend` → PR #1
 - PDF/Excel report downloads
 - QR code generation for individual assets
 
-## 9. What to flag as "not demo-ready"
+## 11. What to flag as "not demo-ready"
 
 - Layer 2 video ingestion (untested on real footage, no UI)
 - "Hi, Madhav" greeting, calendar, workload heatmap on `/` (still placeholder)

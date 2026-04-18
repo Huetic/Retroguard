@@ -16,6 +16,8 @@ import {
   Film,
   Target,
   Users,
+  TrendingDown,
+  QrCode,
 } from "lucide-react";
 import { api, type ApiMeasurement } from "../lib/api";
 
@@ -46,9 +48,11 @@ function buildGroups(assetCount: number | null, alertCount: number | null) {
     {
       label: "Operations",
       items: [
-        { href: "/measure", label: "Field capture",  icon: Smartphone, badge: "Beta" },
-        { href: "/ingest",  label: "Video ingest",   icon: Film                     },
-        { href: "/reports", label: "Compliance",     icon: ScrollText              },
+        { href: "/measure",  label: "Field capture",  icon: Smartphone, badge: "Beta" },
+        { href: "/ingest",   label: "Video ingest",   icon: Film                     },
+        { href: "/qr",       label: "QR pipeline",    icon: QrCode                    },
+        { href: "/forecast", label: "Forecast",       icon: TrendingDown              },
+        { href: "/reports",  label: "Compliance",     icon: ScrollText               },
       ],
     },
   ];
