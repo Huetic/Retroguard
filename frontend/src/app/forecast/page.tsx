@@ -81,13 +81,20 @@ export default function ForecastPage() {
               placeholder="Highway filter"
               value={highway}
               onChange={(e) => setHighway(e.target.value)}
-              className="pill bg-paper/60 border border-ink/5 text-ink/80 h-9 px-3 text-[12.5px] w-[140px]"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") load();
+              }}
+              className="pill bg-paper/60 border border-ink/5 text-ink/80 h-9 px-3 text-[12.5px] w-[140px] focus:outline-none focus:ring-2 focus:ring-orange/40"
             />
             <input
               placeholder="Within N days"
               value={withinDays}
               onChange={(e) => setWithinDays(e.target.value)}
-              className="pill bg-paper/60 border border-ink/5 text-ink/80 h-9 px-3 text-[12.5px] w-[120px]"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") load();
+              }}
+              inputMode="numeric"
+              className="pill bg-paper/60 border border-ink/5 text-ink/80 h-9 px-3 text-[12.5px] w-[120px] focus:outline-none focus:ring-2 focus:ring-orange/40"
             />
             <button onClick={load} className="pill bg-paper/60 border border-ink/5 hover:bg-paper text-ink/75 gap-2">
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />

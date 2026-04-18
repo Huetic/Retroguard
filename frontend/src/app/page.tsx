@@ -278,12 +278,13 @@ function HeroVisual() {
 
         {/* CTA row */}
         <div className="mt-4 flex items-center gap-2">
-          <button
+          <a
+            href="/measure"
             className="flex items-center gap-1.5 h-8 px-3 rounded-full bg-paper-2 text-ink text-[11.5px] font-semibold hover:brightness-105 transition"
           >
             <Play className="w-2.5 h-2.5 fill-ink" strokeWidth={0} />
-            Watch tour
-          </button>
+            Try capture
+          </a>
           <a
             href="/retroguard-paper.pdf"
             target="_blank"
@@ -319,11 +320,24 @@ function HeroVisual() {
    Calendar mini widget
    ========================================================= */
 function CalendarMini() {
-  // April 2026 begins on Wednesday
-  const monthLabel = "April 2026";
-  const firstDayOfWeek = 3; // 0=Sun
-  const daysInMonth = 30;
-  const today = 14;
+  // Today is 2026-04-19 (wall-clock reference for the prototype)
+  const TODAY_YEAR = 2026;
+  const TODAY_MONTH = 3; // April, 0-indexed
+  const TODAY_DAY = 19;
+
+  const [view, setView] = useState<{ year: number; month: number }>({
+    year: TODAY_YEAR,
+    month: TODAY_MONTH,
+  });
+
+  const monthLabel = new Date(view.year, view.month, 1).toLocaleDateString(
+    "en-US",
+    { month: "long", year: "numeric" }
+  );
+  const firstDayOfWeek = new Date(view.year, view.month, 1).getDay(); // 0=Sun
+  const daysInMonth = new Date(view.year, view.month + 1, 0).getDate();
+  const isCurrentMonth =
+    view.year === TODAY_YEAR && view.month === TODAY_MONTH;
 
   const weekdays = ["M", "T", "W", "T", "F", "S", "S"];
   const grid: (number | null)[] = [];
@@ -333,6 +347,13 @@ function CalendarMini() {
   for (let d = 1; d <= daysInMonth; d++) grid.push(d);
   while (grid.length % 7) grid.push(null);
 
+  const shiftMonth = (delta: number) => {
+    setView((v) => {
+      const d = new Date(v.year, v.month + delta, 1);
+      return { year: d.getFullYear(), month: d.getMonth() };
+    });
+  };
+
   return (
     <section
       className="col-span-3 card p-5 flex flex-col rise"
@@ -341,10 +362,18 @@ function CalendarMini() {
       <div className="flex items-center justify-between mb-3">
         <div className="text-[13.5px] font-semibold text-ink">{monthLabel}</div>
         <div className="flex items-center gap-1">
-          <button className="w-7 h-7 rounded-[7px] flex items-center justify-center hover:bg-ink/5 transition">
+          <button
+            onClick={() => shiftMonth(-1)}
+            className="w-7 h-7 rounded-[7px] flex items-center justify-center hover:bg-ink/5 transition"
+            title="Previous month"
+          >
             <ChevronLeft className="w-3.5 h-3.5 text-ink/60" />
           </button>
-          <button className="w-7 h-7 rounded-[7px] flex items-center justify-center hover:bg-ink/5 transition">
+          <button
+            onClick={() => shiftMonth(1)}
+            className="w-7 h-7 rounded-[7px] flex items-center justify-center hover:bg-ink/5 transition"
+            title="Next month"
+          >
             <ChevronRight className="w-3.5 h-3.5 text-ink/60" />
           </button>
         </div>
@@ -362,7 +391,7 @@ function CalendarMini() {
       </div>
       <div className="grid grid-cols-7 gap-0.5">
         {grid.map((d, i) => {
-          const isToday = d === today;
+          const isToday = isCurrentMonth && d === TODAY_DAY;
           return (
             <div
               key={i}
@@ -416,13 +445,14 @@ function CalendarMini() {
         </div>
       </div>
 
-      <button
+      <a
+        href="/measure"
         className="mt-4 h-10 rounded-[12px] text-white font-medium text-[12.5px] flex items-center justify-center gap-2 shadow-[0_10px_24px_-10px_rgba(255,107,53,0.7)] hover:brightness-110 transition"
         style={{ background: "linear-gradient(135deg, #FF8B5A, #E85A26)" }}
       >
         <Plus className="w-3.5 h-3.5" strokeWidth={2} />
         Schedule inspection
-      </button>
+      </a>
     </section>
   );
 }
@@ -533,7 +563,7 @@ function KPI({
   goalLabel,
   className = "col-span-3",
   delay = 0,
-  viewAll = true,
+  viewAllHref,
   idKey,
 }: {
   label: string;
@@ -546,7 +576,7 @@ function KPI({
   goalLabel?: string;
   className?: string;
   delay?: number;
-  viewAll?: boolean;
+  viewAllHref?: string;
   idKey: string;
 }) {
   const min = Math.min(...spark);
@@ -568,10 +598,13 @@ function KPI({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="text-[12.5px] font-semibold text-ink">{label}</div>
-        {viewAll && (
-          <button className="text-[11px] text-ink/45 hover:text-ink font-medium flex items-center gap-0.5">
+        {viewAllHref && (
+          <a
+            href={viewAllHref}
+            className="text-[11px] text-ink/45 hover:text-ink font-medium flex items-center gap-0.5"
+          >
             View all <ArrowUpRight className="w-3 h-3" />
-          </button>
+          </a>
         )}
       </div>
 
@@ -711,9 +744,12 @@ function UpdatesCard() {
     <section className="col-span-3 card p-5 rise" style={{ animationDelay: "60ms" }}>
       <div className="flex items-center justify-between mb-3">
         <div className="text-[13px] font-semibold text-ink">Measurements</div>
-        <button className="text-[11px] text-ink/45 hover:text-ink font-medium flex items-center gap-0.5">
+        <a
+          href="/measure"
+          className="text-[11px] text-ink/45 hover:text-ink font-medium flex items-center gap-0.5"
+        >
           View all <ArrowUpRight className="w-3 h-3" />
-        </button>
+        </a>
       </div>
 
       <div className="flex items-end gap-2 mb-1">
@@ -889,9 +925,13 @@ function AlertsFeed() {
                 {a.timestamp.split(" ")[1]}
               </div>
 
-              <button className="w-8 h-8 rounded-full bg-ink/[0.04] group-hover:bg-ink group-hover:text-paper-2 text-ink/45 flex items-center justify-center transition shrink-0">
+              <a
+                href="/alerts"
+                className="w-8 h-8 rounded-full bg-ink/[0.04] group-hover:bg-ink group-hover:text-paper-2 text-ink/45 flex items-center justify-center transition shrink-0"
+                title="Open in alerts queue"
+              >
                 <ArrowUpRight className="w-3.5 h-3.5" />
-              </button>
+              </a>
             </div>
           );
         })}
@@ -942,13 +982,14 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <QuickActionsMenu />
-            <button
+            <a
+              href="/alerts"
               className="pill text-white font-medium gap-2 shadow-[0_10px_24px_-10px_rgba(255,107,53,0.7)] hover:brightness-110"
               style={{ background: "linear-gradient(135deg, #FF8B5A, #E85A26)" }}
             >
               <Plus className="w-3.5 h-3.5" strokeWidth={2.25} />
               Dispatch crew
-            </button>
+            </a>
           </div>
         </div>
       </div>
@@ -963,6 +1004,7 @@ export default function DashboardPage() {
         {/* Row 2 */}
         <KPI
           idKey="alerts"
+          viewAllHref="/alerts"
           label="Alerts cleared"
           value={alertsCleared.toString()}
           delta={`${stats?.alerts_active ?? 0} active`}
@@ -975,6 +1017,7 @@ export default function DashboardPage() {
         />
         <KPI
           idKey="rl"
+          viewAllHref="/assets"
           label="Avg RL score"
           value={avgRlRatio.toFixed(2)}
           unit="× IRC min"
@@ -991,6 +1034,7 @@ export default function DashboardPage() {
         {/* Row 3 */}
         <KPI
           idKey="hours"
+          viewAllHref="/measure"
           label="Inspection hours"
           value="4.8"
           unit="h avg"
@@ -1004,6 +1048,7 @@ export default function DashboardPage() {
         />
         <KPI
           idKey="qa"
+          viewAllHref="/reports"
           label="QA pass rate"
           value="94"
           unit="%"

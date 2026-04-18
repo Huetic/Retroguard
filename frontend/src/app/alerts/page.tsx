@@ -56,6 +56,60 @@ export default function AlertsPage() {
     }
   };
 
+  // Bulk "Resolve all critical" action
+  const [resolvingAll, setResolvingAll] = useState(false);
+  const handleResolveAllCritical = async () => {
+    const criticals = alerts.filter((a) => a.severity === "critical");
+    if (criticals.length === 0) return;
+    if (!confirm(`Resolve ${criticals.length} critical alert${criticals.length > 1 ? "s" : ""}? This cannot be undone.`))
+      return;
+    setResolvingAll(true);
+    // Optimistic drop
+    setLocalAlerts((prev) =>
+      prev ? prev.filter((a) => a.severity !== "critical") : prev
+    );
+    try {
+      await Promise.all(criticals.map((a) => api.resolveAlert(a.rawId)));
+    } catch (e) {
+      console.error("Bulk resolve failed:", e);
+      refetch();
+    } finally {
+      setResolvingAll(false);
+    }
+  };
+
+  // Export active alerts as JSON download
+  const handleExportQueue = () => {
+    const payload = {
+      generated_at: new Date().toISOString(),
+      total: alerts.length,
+      counts: {
+        critical: alerts.filter((a) => a.severity === "critical").length,
+        warning: alerts.filter((a) => a.severity === "warning").length,
+        info: alerts.filter((a) => a.severity === "info").length,
+      },
+      alerts: alerts.map((a) => ({
+        id: a.id,
+        severity: a.severity,
+        highway: a.highway,
+        chainage: a.chainage,
+        message: a.message,
+        timestamp: a.timestamp,
+      })),
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `retroguard-alerts-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const counts = useMemo(
     () => ({
       total: alerts.length,
@@ -121,18 +175,25 @@ export default function AlertsPage() {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            <button className="pill bg-paper/60 border border-ink/5 hover:bg-paper text-ink/75 gap-2">
+            <button
+              onClick={handleExportQueue}
+              className="pill bg-paper/60 border border-ink/5 hover:bg-paper text-ink/75 gap-2"
+              title="Download the current alert queue as JSON"
+            >
               <Download className="w-3.5 h-3.5" strokeWidth={1.8} />
               Export queue
             </button>
             <button
-              className="pill text-white font-medium gap-2 shadow-[0_10px_24px_-10px_rgba(255,107,53,0.7)] hover:brightness-110"
+              onClick={handleResolveAllCritical}
+              disabled={resolvingAll || alerts.filter((a) => a.severity === "critical").length === 0}
+              className="pill text-white font-medium gap-2 shadow-[0_10px_24px_-10px_rgba(255,107,53,0.7)] hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 background: "linear-gradient(135deg, #FF8B5A, #E85A26)",
               }}
+              title="Mark every critical alert as resolved"
             >
               <CheckCircle2 className="w-3.5 h-3.5" strokeWidth={2.25} />
-              Resolve selected
+              {resolvingAll ? "Resolving…" : `Resolve all critical (${alerts.filter((a) => a.severity === "critical").length})`}
             </button>
           </div>
         </div>
@@ -513,13 +574,14 @@ function AlertRow({
 
       {/* Actions */}
       <div className="flex items-center gap-1.5 shrink-0">
-        <button
+        <a
+          href={`/assets?focus=${alert.assetId}`}
           className="h-9 px-3 rounded-full text-[11.5px] font-medium text-ink/65 hover:text-ink hover:bg-ink/[0.04] border border-ink/[0.06] transition flex items-center gap-1.5"
-          title="View asset"
+          title={`View asset #${alert.assetId}`}
         >
           View
           <ArrowUpRight className="w-3 h-3" />
-        </button>
+        </a>
         <button
           onClick={() => onResolve(alert.id)}
           className="h-9 px-3 rounded-full text-[11.5px] font-medium text-ink/65 hover:text-white transition flex items-center gap-1.5 hover:shadow-[0_6px_14px_-6px_rgba(255,107,53,0.7)]"

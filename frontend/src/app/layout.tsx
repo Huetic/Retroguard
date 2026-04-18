@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Sidebar from "../components/Sidebar";
+import SearchCommand from "../components/SearchCommand";
 import { AuthProvider } from "../lib/AuthProvider";
 
 const geistSans = Geist({
@@ -56,6 +57,8 @@ export default function RootLayout({
             <Sidebar />
             <main className="flex-1 min-w-0">{children}</main>
           </div>
+          {/* Global search modal — opens via ⌘K or openGlobalSearch() */}
+          <SearchCommand />
         </AuthProvider>
       </body>
     </html>

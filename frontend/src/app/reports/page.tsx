@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import {
   Download,
   CheckCircle2,
@@ -12,11 +12,34 @@ import {
   Share2,
   TrendingDown,
   ChevronDown,
+  Check,
 } from "lucide-react";
 import TopBar from "../../components/TopBar";
 import { api, useApi, type UiHighwayReport } from "../../lib/api";
 
 const highwayOptions = ["NH-48", "NH-44", "NH-27", "NH-66", "DME"];
+
+// Reporting periods — 2026-04 is the anchor ("current month").
+// Generate the last 12 months so "April 2026" is first.
+type Period = { key: string; label: string; short: string };
+const REPORT_PERIODS: Period[] = (() => {
+  const anchor = new Date(2026, 3, 1); // April 2026
+  const out: Period[] = [];
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(anchor.getFullYear(), anchor.getMonth() - i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const label = d.toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+    });
+    const short = d
+      .toLocaleDateString("en-US", { month: "short", year: "numeric" })
+      .replace(" ", "")
+      .toLowerCase();
+    out.push({ key, label, short });
+  }
+  return out;
+})();
 
 const highwayNames: Record<string, string> = {
   "NH-48": "Mumbai — Ahmedabad",
@@ -39,6 +62,21 @@ const EMPTY_REPORT: UiHighwayReport = {
 export default function ReportsPage() {
   const [selectedHighway, setSelectedHighway] = useState(highwayOptions[0]);
   const [showToast, setShowToast] = useState(false);
+
+  const [period, setPeriod] = useState<Period>(REPORT_PERIODS[0]);
+  const [periodOpen, setPeriodOpen] = useState(false);
+  const periodRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!periodOpen) return;
+    const onDoc = (e: MouseEvent) => {
+      if (periodRef.current && !periodRef.current.contains(e.target as Node)) {
+        setPeriodOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [periodOpen]);
 
   // Reports fetch per selected highway
   const {
@@ -79,6 +117,19 @@ export default function ReportsPage() {
     setTimeout(() => setShowToast(false), 3000);
   };
 
+  const [shareCopied, setShareCopied] = useState(false);
+  const handleShare = async () => {
+    const url = `${window.location.origin}/reports?highway=${selectedHighway}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2500);
+    } catch {
+      // Fallback for older browsers / insecure contexts
+      window.prompt("Copy this link:", url);
+    }
+  };
+
   return (
     <div className="px-6 pt-4 pb-10 max-w-[1480px]">
       {/* Toast */}
@@ -101,7 +152,7 @@ export default function ReportsPage() {
                 Report generated successfully
               </p>
               <p className="text-[11px] font-mono tabular text-white/80">
-                {selectedHighway.toLowerCase()}_compliance_apr2026.pdf
+                {selectedHighway.toLowerCase()}_compliance_{period.short}.pdf
               </p>
             </div>
           </div>
@@ -137,11 +188,51 @@ export default function ReportsPage() {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            <button className="pill bg-paper/60 border border-ink/5 hover:bg-paper text-ink/75 gap-2">
-              <Calendar className="w-3.5 h-3.5" strokeWidth={1.8} />
-              April 2026
-              <ChevronDown className="w-3 h-3 opacity-60" />
-            </button>
+            <div ref={periodRef} className="relative">
+              <button
+                onClick={() => setPeriodOpen((v) => !v)}
+                aria-haspopup="menu"
+                aria-expanded={periodOpen}
+                className="pill bg-paper/60 border border-ink/5 hover:bg-paper text-ink/75 gap-2"
+              >
+                <Calendar className="w-3.5 h-3.5" strokeWidth={1.8} />
+                {period.label}
+                <ChevronDown
+                  className={`w-3 h-3 opacity-60 transition ${
+                    periodOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+              {periodOpen && (
+                <div
+                  role="menu"
+                  className="absolute top-[calc(100%+6px)] right-0 z-[2100] min-w-[200px] max-h-[320px] overflow-y-auto rounded-[14px] bg-paper shadow-[0_18px_40px_-14px_rgba(28,27,25,0.2)] border border-ink/[0.06] p-1.5"
+                >
+                  {REPORT_PERIODS.map((p) => {
+                    const active = p.key === period.key;
+                    return (
+                      <button
+                        key={p.key}
+                        role="menuitemradio"
+                        aria-checked={active}
+                        onClick={() => {
+                          setPeriod(p);
+                          setPeriodOpen(false);
+                        }}
+                        className={`flex items-center justify-between w-full h-9 px-3 rounded-[10px] text-[12.5px] text-left transition ${
+                          active
+                            ? "bg-orange/[0.08] text-orange-deep font-medium"
+                            : "text-ink/75 hover:bg-ink/[0.04]"
+                        }`}
+                      >
+                        <span>{p.label}</span>
+                        {active && <Check className="w-3.5 h-3.5" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
             <button
               onClick={() => window.print()}
               aria-label="Print report"
@@ -150,8 +241,22 @@ export default function ReportsPage() {
             >
               <Printer className="w-3.5 h-3.5" strokeWidth={1.8} />
             </button>
-            <button className="pill bg-paper/60 border border-ink/5 hover:bg-paper text-ink/75 w-10 !px-0">
+            <button
+              onClick={handleShare}
+              className="pill bg-paper/60 border border-ink/5 hover:bg-paper text-ink/75 w-10 !px-0 relative"
+              title="Copy share link to clipboard"
+            >
               <Share2 className="w-3.5 h-3.5" strokeWidth={1.8} />
+              {shareCopied && (
+                <span
+                  className="absolute -bottom-9 right-0 px-2 py-1 rounded-[8px] text-[10.5px] font-mono tabular text-white whitespace-nowrap shadow-[0_8px_18px_-6px_rgba(28,27,25,0.3)]"
+                  style={{
+                    background: "linear-gradient(135deg, #5EC486, #3FA364)",
+                  }}
+                >
+                  Link copied ✓
+                </span>
+              )}
             </button>
             <button
               onClick={handleExport}

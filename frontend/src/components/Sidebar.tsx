@@ -245,10 +245,15 @@ export default function Sidebar() {
                 </span>
               </div>
             ))}
-            <button className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-[10px] text-[10.5px] text-paper-2/45 hover:text-paper-2 hover:bg-paper-2/[0.04] transition font-mono tabular uppercase tracking-[0.12em]">
-              <ChevronsDown className="w-3 h-3" />
-              View all
-            </button>
+            {activity.length > 0 && (
+              <Link
+                href="/measure"
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-[10px] text-[10.5px] text-paper-2/45 hover:text-paper-2 hover:bg-paper-2/[0.04] transition font-mono tabular uppercase tracking-[0.12em]"
+              >
+                <ChevronsDown className="w-3 h-3" />
+                View all
+              </Link>
+            )}
           </div>
         </div>
       </nav>
@@ -258,8 +263,8 @@ export default function Sidebar() {
         <div className="px-3 pb-2">
           <div className="flex items-center justify-between px-2.5 py-2 rounded-[10px] bg-paper-2/[0.04]">
             <div className="leading-tight min-w-0">
-              <div className="text-[11.5px] font-medium text-paper-2/85 truncate">{user.username}</div>
-              <div className="text-[9.5px] text-paper-2/40 capitalize">{user.role}</div>
+              <div className="text-[11.5px] font-medium text-paper-2/85 truncate">Madhav Dogra</div>
+              <div className="text-[9.5px] text-paper-2/40">Chief Engr · Western</div>
             </div>
             <button
               onClick={signOut}

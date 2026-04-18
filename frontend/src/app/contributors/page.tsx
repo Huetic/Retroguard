@@ -129,7 +129,7 @@ export default function ContributorsPage() {
                     <button
                       onClick={() => toggleActive(c)}
                       className={`text-[10.5px] px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                        c.active ? "bg-green-500/15 text-green-700" : "bg-ink/10 text-ink/50"
+                        c.active ? "bg-[rgba(63,163,100,0.12)] text-[#2E7E4A]" : "bg-ink/10 text-ink/50"
                       }`}
                     >
                       {c.active ? "active" : "revoked"}

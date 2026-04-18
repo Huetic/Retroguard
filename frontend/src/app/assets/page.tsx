@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   Search,
   SlidersHorizontal,
@@ -16,6 +17,7 @@ import {
   X,
   FileSpreadsheet,
   RefreshCw,
+  Check,
 } from "lucide-react";
 import TopBar from "../../components/TopBar";
 import { api, useApi, type UiAsset } from "../../lib/api";
@@ -32,11 +34,37 @@ const types = [
   "Delineator Post",
 ];
 
+type SortKey =
+  | "measured_desc"
+  | "measured_asc"
+  | "rl_asc"
+  | "rl_desc"
+  | "id_asc";
+
+const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+  { key: "measured_desc", label: "Last measured · newest" },
+  { key: "measured_asc", label: "Last measured · oldest" },
+  { key: "rl_asc", label: "Current RL · lowest first" },
+  { key: "rl_desc", label: "Current RL · highest first" },
+  { key: "id_asc", label: "Asset ID · A → Z" },
+];
+
+const PAGE_SIZE = 25;
+
 export default function AssetsPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const focusParam = searchParams.get("focus");
+  const focusId = focusParam ? Number(focusParam) : null;
+
   const [search, setSearch] = useState("");
   const [hwFilter, setHwFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
   const [typeFilter, setTypeFilter] = useState("All");
+  const [sortKey, setSortKey] = useState<SortKey>("measured_desc");
+  const [sortOpen, setSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
+  const [page, setPage] = useState(1);
 
   const { data: assets, loading, error, refetch } = useApi<UiAsset[]>(
     () => api.listAssets(),
@@ -44,8 +72,29 @@ export default function AssetsPage() {
   );
   const allAssets: UiAsset[] = assets ?? [];
 
+  // Close sort menu on outside click
+  useEffect(() => {
+    if (!sortOpen) return;
+    const onDoc = (e: MouseEvent) => {
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
+        setSortOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [sortOpen]);
+
+  // Reset to page 1 whenever filters / sort / focus change
+  useEffect(() => {
+    setPage(1);
+  }, [search, hwFilter, statusFilter, typeFilter, sortKey, focusId]);
+
+  const focusedAsset =
+    focusId !== null ? allAssets.find((a) => a.rawId === focusId) : null;
+
   const filtered = useMemo(() => {
-    return allAssets.filter((a) => {
+    const rows = allAssets.filter((a) => {
+      if (focusId !== null) return a.rawId === focusId;
       const q = search.toLowerCase();
       const matchesSearch =
         q === "" ||
@@ -58,7 +107,35 @@ export default function AssetsPage() {
       const matchesType = typeFilter === "All" || a.type === typeFilter;
       return matchesSearch && matchesHw && matchesStatus && matchesType;
     });
-  }, [search, hwFilter, statusFilter, typeFilter, allAssets]);
+    const sorted = [...rows];
+    sorted.sort((a, b) => {
+      switch (sortKey) {
+        case "measured_desc":
+          return b.lastMeasured.localeCompare(a.lastMeasured);
+        case "measured_asc":
+          return a.lastMeasured.localeCompare(b.lastMeasured);
+        case "rl_asc":
+          return a.currentRL - b.currentRL;
+        case "rl_desc":
+          return b.currentRL - a.currentRL;
+        case "id_asc":
+          return a.id.localeCompare(b.id);
+      }
+    });
+    return sorted;
+  }, [search, hwFilter, statusFilter, typeFilter, allAssets, sortKey, focusId]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pageStart = (safePage - 1) * PAGE_SIZE;
+  const pageEnd = Math.min(pageStart + PAGE_SIZE, filtered.length);
+  const paged = filtered.slice(pageStart, pageEnd);
+  const activeSort =
+    SORT_OPTIONS.find((o) => o.key === sortKey) ?? SORT_OPTIONS[0];
+
+  const clearFocus = () => {
+    router.replace("/assets");
+  };
 
   const counts = useMemo(
     () => ({
@@ -173,6 +250,27 @@ export default function AssetsPage() {
         </div>
       </div>
 
+      {focusId !== null && (
+        <div
+          className="mb-4 flex items-center justify-between gap-3 rounded-[12px] border border-orange/25 bg-orange/[0.07] px-4 py-2.5 rise"
+          style={{ animationDelay: "60ms" }}
+        >
+          <div className="text-[12.5px] text-orange-deep font-medium">
+            Showing asset from alert ·{" "}
+            <span className="font-mono tabular">
+              {focusedAsset ? focusedAsset.id : `#${focusId}`}
+            </span>
+          </div>
+          <button
+            onClick={clearFocus}
+            className="pill bg-paper/60 hover:bg-paper border border-ink/5 text-ink/70 gap-1.5 text-[11.5px] h-8"
+          >
+            <X className="w-3 h-3" />
+            Clear
+          </button>
+        </div>
+      )}
+
       {/* ======================================================
           Filter bar
           ====================================================== */}
@@ -258,10 +356,50 @@ export default function AssetsPage() {
 
         <div className="flex items-center gap-2 text-[11px] text-ink/55">
           <span>Sort</span>
-          <button className="flex items-center gap-1.5 text-[11px] font-medium text-ink/80 bg-paper/60 hover:bg-paper border border-ink/5 rounded-full h-8 px-3 transition">
-            Last measured
-            <ChevronDown className="w-3 h-3 text-ink/50" />
-          </button>
+          <div ref={sortRef} className="relative">
+            <button
+              onClick={() => setSortOpen((v) => !v)}
+              aria-haspopup="menu"
+              aria-expanded={sortOpen}
+              className="flex items-center gap-1.5 text-[11px] font-medium text-ink/80 bg-paper/60 hover:bg-paper border border-ink/5 rounded-full h-8 px-3 transition"
+            >
+              {activeSort.label}
+              <ChevronDown
+                className={`w-3 h-3 text-ink/50 transition ${
+                  sortOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+            {sortOpen && (
+              <div
+                role="menu"
+                className="absolute top-[calc(100%+6px)] right-0 z-[1500] min-w-[220px] rounded-[12px] bg-paper shadow-[0_18px_40px_-14px_rgba(28,27,25,0.2)] border border-ink/[0.06] p-1.5"
+              >
+                {SORT_OPTIONS.map((opt) => {
+                  const active = opt.key === sortKey;
+                  return (
+                    <button
+                      key={opt.key}
+                      role="menuitemradio"
+                      aria-checked={active}
+                      onClick={() => {
+                        setSortKey(opt.key);
+                        setSortOpen(false);
+                      }}
+                      className={`flex items-center justify-between w-full h-9 px-3 rounded-[9px] text-[12px] text-left transition ${
+                        active
+                          ? "bg-orange/[0.08] text-orange-deep font-medium"
+                          : "text-ink/75 hover:bg-ink/[0.04]"
+                      }`}
+                    >
+                      <span>{opt.label}</span>
+                      {active && <Check className="w-3.5 h-3.5" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -314,7 +452,7 @@ export default function AssetsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((asset) => {
+                  {paged.map((asset) => {
                     const deficit = asset.currentRL - asset.ircMin;
                     const pct = (asset.currentRL / asset.ircMin) * 100;
                     const rlTone =
@@ -413,16 +551,27 @@ export default function AssetsPage() {
               style={{ background: "rgba(246,241,229,0.35)" }}
             >
               <div className="text-[10.5px] font-mono tabular uppercase tracking-[0.14em] text-ink/50">
-                Rows 1–{filtered.length} of {filtered.length}
+                Rows {filtered.length === 0 ? 0 : pageStart + 1}–{pageEnd} of{" "}
+                {filtered.length}
               </div>
               <div className="flex items-center gap-1.5">
-                <button className="h-7 w-7 rounded-[7px] flex items-center justify-center bg-ink/[0.04] text-ink/35 hover:text-ink hover:bg-ink/[0.08] transition">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={safePage === 1}
+                  className="h-7 w-7 rounded-[7px] flex items-center justify-center bg-ink/[0.04] text-ink/35 hover:text-ink hover:bg-ink/[0.08] transition disabled:opacity-40 disabled:cursor-not-allowed"
+                  title="Previous page"
+                >
                   <ChevronDown className="w-3 h-3 rotate-90" />
                 </button>
                 <span className="text-[11px] text-ink/60 font-mono tabular px-2">
-                  page 1 / 1
+                  page {safePage} / {totalPages}
                 </span>
-                <button className="h-7 w-7 rounded-[7px] flex items-center justify-center bg-ink/[0.04] text-ink/35 hover:text-ink hover:bg-ink/[0.08] transition">
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={safePage === totalPages}
+                  className="h-7 w-7 rounded-[7px] flex items-center justify-center bg-ink/[0.04] text-ink/35 hover:text-ink hover:bg-ink/[0.08] transition disabled:opacity-40 disabled:cursor-not-allowed"
+                  title="Next page"
+                >
                   <ChevronDown className="w-3 h-3 -rotate-90" />
                 </button>
               </div>

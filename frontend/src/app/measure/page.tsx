@@ -282,13 +282,22 @@ export default function MeasurePage() {
               Reset walkthrough
             </button>
             <button
+              onClick={() =>
+                setToast({
+                  kind: "success",
+                  title: "Field-app beta · Q3 2026",
+                  detail:
+                    "Contact your NHAI circle for early access · rollout in phases",
+                })
+              }
               className="pill text-white font-medium gap-2 shadow-[0_10px_24px_-10px_rgba(255,107,53,0.7)] hover:brightness-110"
               style={{
                 background: "linear-gradient(135deg, #FF8B5A, #E85A26)",
               }}
+              title="Field-app rollout information"
             >
               <Smartphone className="w-3.5 h-3.5" strokeWidth={2.25} />
-              Install the app
+              Get the app
               <ArrowUpRight className="w-3 h-3" />
             </button>
           </div>
