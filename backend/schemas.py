@@ -286,13 +286,14 @@ class ContributorResponse(BaseModel):
     active: bool
     created_at: datetime
     last_used_at: Optional[datetime]
+    api_key_prefix: Optional[str] = None
 
     class Config:
         from_attributes = True
 
 
 class ContributorWithKey(ContributorResponse):
-    """Returned ONCE on create — api_key is never exposed again."""
+    """Returned ONCE on create/rotate — api_key plaintext is never exposed again."""
     api_key: str
 
 

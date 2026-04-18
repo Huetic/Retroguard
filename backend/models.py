@@ -88,7 +88,8 @@ class Contributor(Base):
     name = Column(String(200), nullable=False)
     contributor_type = Column(String(30), nullable=False, default="fleet")
     # ^ fleet / civic / individual / partner
-    api_key = Column(String(64), nullable=False, unique=True, index=True)
+    api_key_hash = Column(String(64), nullable=False, unique=True, index=True)
+    api_key_prefix = Column(String(16), nullable=True)
     trust_level = Column(Float, nullable=False, default=0.5)  # 0.0 – 1.0
     contact_email = Column(String(200), nullable=True)
     notes = Column(Text, nullable=True)

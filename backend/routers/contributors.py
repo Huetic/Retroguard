@@ -8,6 +8,7 @@ Layer 4 infrastructure: contributor catalog + API key auth dependency.
 """
 from __future__ import annotations
 
+import hashlib
 import secrets
 from datetime import datetime
 from typing import List
@@ -31,6 +32,10 @@ def _new_key() -> str:
     return f"rg_{secrets.token_urlsafe(32)}"
 
 
+def _hash_key(plaintext: str) -> str:
+    return hashlib.sha256(plaintext.encode()).hexdigest()
+
+
 def require_contributor(
     x_api_key: str = Header(..., alias="X-API-Key"),
     db: Session = Depends(get_db),
@@ -39,7 +44,8 @@ def require_contributor(
     Dependency for public contribute endpoints. Looks up the API key,
     rejects inactive or unknown keys, bumps last_used_at.
     """
-    c = db.query(Contributor).filter(Contributor.api_key == x_api_key).first()
+    key_hash = _hash_key(x_api_key)
+    c = db.query(Contributor).filter(Contributor.api_key_hash == key_hash).first()
     if not c:
         raise HTTPException(401, "Invalid API key")
     if not c.active:
@@ -57,19 +63,21 @@ def list_contributors(db: Session = Depends(get_db)):
 @router.post("", response_model=ContributorWithKey, status_code=201)
 def create_contributor(payload: ContributorCreate, db: Session = Depends(get_db)):
     """Create a new contributor. The API key is returned ONCE here only."""
+    plaintext = _new_key()
     c = Contributor(
         name=payload.name,
         contributor_type=payload.contributor_type,
         trust_level=payload.trust_level,
         contact_email=payload.contact_email,
         notes=payload.notes,
-        api_key=_new_key(),
+        api_key_hash=_hash_key(plaintext),
+        api_key_prefix=plaintext[:8],
         active=True,
     )
     db.add(c)
     db.commit()
     db.refresh(c)
-    # Return the api_key exactly once
+    # Return the plaintext api_key exactly once
     return ContributorWithKey(
         id=c.id,
         name=c.name,
@@ -80,7 +88,8 @@ def create_contributor(payload: ContributorCreate, db: Session = Depends(get_db)
         active=c.active,
         created_at=c.created_at,
         last_used_at=c.last_used_at,
-        api_key=c.api_key,
+        api_key_prefix=c.api_key_prefix,
+        api_key=plaintext,
     )
 
 
@@ -102,7 +111,9 @@ def rotate_key(cid: int, db: Session = Depends(get_db)):
     c = db.query(Contributor).filter(Contributor.id == cid).first()
     if not c:
         raise HTTPException(404, "Contributor not found")
-    c.api_key = _new_key()
+    plaintext = _new_key()
+    c.api_key_hash = _hash_key(plaintext)
+    c.api_key_prefix = plaintext[:8]
     db.commit()
     db.refresh(c)
     return ContributorWithKey(
@@ -115,7 +126,8 @@ def rotate_key(cid: int, db: Session = Depends(get_db)):
         active=c.active,
         created_at=c.created_at,
         last_used_at=c.last_used_at,
-        api_key=c.api_key,
+        api_key_prefix=c.api_key_prefix,
+        api_key=plaintext,
     )
 
 
