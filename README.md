@@ -236,8 +236,8 @@ See `latex/main.pdf` — 26 pages covering:
 
 Built by the team at **[Huetic](https://huetic.com)**.
 
-- **Madhav Dogra** · madhavdogra@gmail.com
-- **Aaditya Gaur** · aaditya2605@gmail.com
+- **Madhav Dogra** · madhav@huetic.com
+- **Aaditya Gaur** · aaditya@huetic.com
 
 ---
 
