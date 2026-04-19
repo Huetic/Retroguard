@@ -74,3 +74,15 @@ texput.log
 *.tmp
 *.bak
 *.orig
+
+# --------- Runtime artefacts (not for repo) ---------
+backend/uploads/
+.pids/
+*.webarchive
+
+# --------- Internal / agent scratch files ---------
+AGENTS.md
+.planning/
+assets_template.csv
+SESSION_CHANGELOG.md
+TODO.md
