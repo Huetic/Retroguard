@@ -234,8 +234,10 @@ See `latex/main.pdf` — 26 pages covering:
 
 ## Team
 
-**Madhav Dogra** · madhavdogra@gmail.com · paper author
-**Aaditya Gaur** · hackathon teammate · implementation
+Built by the team at **[Huetic](https://huetic.com)**.
+
+- **Madhav Dogra** · madhavdogra@gmail.com
+- **Aaditya Gaur** · aaditya2605@gmail.com
 
 ---
 
