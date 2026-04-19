@@ -2,7 +2,7 @@
 
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export interface MapAsset {
   id: string;
@@ -17,11 +17,94 @@ export interface MapAsset {
   lastMeasured: string;
 }
 
+/** Imperative controller exposed to the parent page so dock-tool buttons
+    (Layers / Center / Fullscreen) can reach into the Leaflet instance. */
+export interface MapController {
+  recenter: () => void;
+  setBasemap: (b: Basemap) => void;
+  toggleFullscreen: () => void;
+}
+
+export type Basemap = "street" | "satellite" | "terrain";
+
+const BASEMAPS: Record<
+  Basemap,
+  { url: string; attribution: string; maxZoom?: number }
+> = {
+  street: {
+    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 19,
+  },
+  satellite: {
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    attribution:
+      "Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics",
+    maxZoom: 19,
+  },
+  terrain: {
+    url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+    attribution:
+      "Map data: &copy; OpenTopoMap (CC-BY-SA) · &copy; OpenStreetMap contributors",
+    maxZoom: 17,
+  },
+};
+
 function SetViewOnLoad() {
   const map = useMap();
   useEffect(() => {
     map.invalidateSize();
   }, [map]);
+  return null;
+}
+
+/** Bridge component — lives inside MapContainer so useMap() works,
+    writes the Leaflet map instance into the parent's controller ref. */
+function ControllerBridge({
+  controllerRef,
+  defaultCenter,
+  defaultZoom,
+  setBasemapState,
+}: {
+  controllerRef: React.MutableRefObject<MapController | null> | undefined;
+  defaultCenter: [number, number];
+  defaultZoom: number;
+  setBasemapState: (b: Basemap) => void;
+}) {
+  const map = useMap();
+  useEffect(() => {
+    if (!controllerRef) return;
+    controllerRef.current = {
+      recenter: () => {
+        map.flyTo(defaultCenter, defaultZoom, { duration: 0.8 });
+      },
+      setBasemap: (b) => {
+        setBasemapState(b);
+      },
+      toggleFullscreen: () => {
+        const el = map.getContainer();
+        const doc = document as Document & {
+          webkitExitFullscreen?: () => Promise<void>;
+        };
+        const elAny = el as HTMLElement & {
+          webkitRequestFullscreen?: () => Promise<void>;
+        };
+        if (document.fullscreenElement) {
+          if (document.exitFullscreen) document.exitFullscreen();
+          else if (doc.webkitExitFullscreen) doc.webkitExitFullscreen();
+        } else {
+          if (el.requestFullscreen) el.requestFullscreen();
+          else if (elAny.webkitRequestFullscreen)
+            elAny.webkitRequestFullscreen();
+        }
+        setTimeout(() => map.invalidateSize(), 100);
+      },
+    };
+    return () => {
+      if (controllerRef) controllerRef.current = null;
+    };
+  }, [map, controllerRef, defaultCenter, defaultZoom, setBasemapState]);
   return null;
 }
 
@@ -42,6 +125,8 @@ interface MapComponentProps {
   center?: [number, number];
   zoom?: number;
   height?: string;
+  controllerRef?: React.MutableRefObject<MapController | null>;
+  initialBasemap?: Basemap;
 }
 
 export default function MapComponent({
@@ -49,7 +134,12 @@ export default function MapComponent({
   center = [22.5, 78.5],
   zoom = 5,
   height = "100%",
+  controllerRef,
+  initialBasemap = "street",
 }: MapComponentProps) {
+  const [basemap, setBasemap] = useState<Basemap>(initialBasemap);
+  const basemapCfg = BASEMAPS[basemap];
+
   return (
     <div style={{ height, width: "100%", position: "relative" }}>
       <MapContainer
@@ -60,9 +150,17 @@ export default function MapComponent({
         zoomControl={false}
       >
         <SetViewOnLoad />
+        <ControllerBridge
+          controllerRef={controllerRef}
+          defaultCenter={center}
+          defaultZoom={zoom}
+          setBasemapState={setBasemap}
+        />
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          key={basemap}
+          attribution={basemapCfg.attribution}
+          url={basemapCfg.url}
+          maxZoom={basemapCfg.maxZoom}
         />
         {assets.map((asset) => (
           <CircleMarker

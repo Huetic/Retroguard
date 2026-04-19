@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Crosshair,
   Camera,
@@ -28,6 +28,7 @@ interface MeasurementResult {
   newStatus: AssetStatus;
   oldStatus: AssetStatus;
   statusChanged: boolean;
+  imageUrl: string | null;
 }
 
 interface ToastState {
@@ -52,6 +53,29 @@ export default function MeasurePage() {
     useState<MeasurementResult | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastState | null>(null);
+
+  // ---- Camera / file-capture wiring ----
+  const captureInputRef = useRef<HTMLInputElement | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const previewUrlRef = useRef<string | null>(null);
+
+  // Revoke any outstanding object URL on unmount so blob memory is freed.
+  useEffect(() => {
+    return () => {
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+        previewUrlRef.current = null;
+      }
+    };
+  }, []);
+
+  const resetPreview = useCallback(() => {
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
+    }
+    setPreviewUrl(null);
+  }, []);
 
   /** Strategically pick an asset whose status will flip on our next
       measurement — prefer 'warning' (→ drops to critical, creates alarm),
@@ -94,69 +118,95 @@ export default function MeasurePage() {
     }, 2000);
   }, []);
 
-  const handleMeasure = useCallback(async () => {
-    if (!targetAsset) return;
-    setMeasuring(true);
-    setShowFlash(true);
+  /** Open the native camera / file picker. Actual measurement runs from
+      the onChange handler below, once the user has captured an image. */
+  const handleMeasure = useCallback(() => {
+    if (!targetAsset || measuring) return;
     setSaveError(null);
-    setTimeout(() => setShowFlash(false), 600);
-
-    // Generate a realistic-looking RL value that's 82–90 % of the IRC
-    // minimum for this asset — guaranteed to land in "critical" territory,
-    // which makes the backend auto-generate a new alert on save.
-    const targetRl =
-      Math.round(
-        targetAsset.ircMin * (0.82 + Math.random() * 0.08) * 10
-      ) / 10;
-    const confidence =
-      Math.round((0.84 + Math.random() * 0.08) * 100) / 100;
-
-    try {
-      // Hold on the viewfinder spinner briefly before the API completes
-      await new Promise((r) => setTimeout(r, 1500));
-
-      const response = await api.createMeasurement({
-        asset_id: targetAsset.rawId,
-        rl_value: targetRl,
-        confidence,
-        source_layer: "smartphone",
-        device_info: "Pixel 7a · Android 14",
-      });
-
-      // Recompute status from ratio so we can show what the row
-      // transitioned to without another GET.
-      const ratio = targetRl / targetAsset.ircMin;
-      const newStatus: AssetStatus =
-        ratio >= 1.2 ? "compliant" : ratio >= 1.0 ? "warning" : "critical";
-      const statusChanged = newStatus !== targetAsset.status;
-
-      setMeasurementResult({
-        measurementId: response.id,
-        rlValue: targetRl,
-        confidence,
-        newStatus,
-        oldStatus: targetAsset.status,
-        statusChanged,
-      });
-      setMeasured(true);
-
-      setToast({
-        kind:
-          statusChanged && newStatus === "critical" ? "alarm" : "success",
-        title: statusChanged
-          ? `Status shifted · ${newStatus.toUpperCase()} · alert raised`
-          : "Measurement saved to registry",
-        detail: `${targetAsset.id} · reading #${response.id}`,
-      });
-      setTimeout(() => setToast(null), 6000);
-    } catch (e) {
-      setSaveError(
-        e instanceof Error ? e.message : "Failed to save measurement"
-      );
-    } finally {
-      setMeasuring(false);
+    const el = captureInputRef.current;
+    if (!el) {
+      setSaveError("Camera input is unavailable in this browser.");
+      return;
     }
-  }, [targetAsset]);
+    el.value = ""; // allow re-capturing the same file
+    el.click();
+  }, [targetAsset, measuring]);
+
+  const handleCapture = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file || !targetAsset) return;
+
+      setMeasuring(true);
+      setShowFlash(true);
+      setSaveError(null);
+      setTimeout(() => setShowFlash(false), 600);
+
+      // Show a local preview immediately while the upload is in-flight.
+      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+      const localUrl = URL.createObjectURL(file);
+      previewUrlRef.current = localUrl;
+      setPreviewUrl(localUrl);
+
+      // Generate a realistic-looking RL value that's 82–90 % of the IRC
+      // minimum for this asset — guaranteed to land in "critical" territory,
+      // which makes the backend auto-generate a new alert on save.
+      const targetRl =
+        Math.round(
+          targetAsset.ircMin * (0.82 + Math.random() * 0.08) * 10
+        ) / 10;
+      const confidence =
+        Math.round((0.84 + Math.random() * 0.08) * 100) / 100;
+
+      try {
+        const uploaded = await api.uploadImage(file);
+
+        const response = await api.createMeasurement({
+          asset_id: targetAsset.rawId,
+          rl_value: targetRl,
+          confidence,
+          source_layer: "smartphone",
+          device_info: "Pixel 7a · Android 14",
+          image_path: uploaded.imagePath,
+        });
+
+        // Recompute status from ratio so we can show what the row
+        // transitioned to without another GET.
+        const ratio = targetRl / targetAsset.ircMin;
+        const newStatus: AssetStatus =
+          ratio >= 1.2 ? "compliant" : ratio >= 1.0 ? "warning" : "critical";
+        const statusChanged = newStatus !== targetAsset.status;
+
+        setMeasurementResult({
+          measurementId: response.id,
+          rlValue: targetRl,
+          confidence,
+          newStatus,
+          oldStatus: targetAsset.status,
+          statusChanged,
+          imageUrl: uploaded.imageUrl,
+        });
+        setMeasured(true);
+
+        setToast({
+          kind:
+            statusChanged && newStatus === "critical" ? "alarm" : "success",
+          title: statusChanged
+            ? `Status shifted · ${newStatus.toUpperCase()} · alert raised`
+            : "Measurement saved to registry",
+          detail: `${targetAsset.id} · reading #${response.id}`,
+        });
+        setTimeout(() => setToast(null), 6000);
+      } catch (e) {
+        setSaveError(
+          e instanceof Error ? e.message : "Failed to save measurement"
+        );
+      } finally {
+        setMeasuring(false);
+      }
+    },
+    [targetAsset]
+  );
 
   const handleReset = useCallback(() => {
     setStep(1);
@@ -167,8 +217,9 @@ export default function MeasurePage() {
     setMeasured(false);
     setMeasurementResult(null);
     setSaveError(null);
+    resetPreview();
     void pickNewTarget();
-  }, [pickNewTarget]);
+  }, [pickNewTarget, resetPreview]);
 
   useEffect(() => {
     if (calibrated && step === 1) {
@@ -231,13 +282,22 @@ export default function MeasurePage() {
               Reset walkthrough
             </button>
             <button
+              onClick={() =>
+                setToast({
+                  kind: "success",
+                  title: "Field-app beta · Q3 2026",
+                  detail:
+                    "Contact your NHAI circle for early access · rollout in phases",
+                })
+              }
               className="pill text-white font-medium gap-2 shadow-[0_10px_24px_-10px_rgba(255,107,53,0.7)] hover:brightness-110"
               style={{
                 background: "linear-gradient(135deg, #FF8B5A, #E85A26)",
               }}
+              title="Field-app rollout information"
             >
               <Smartphone className="w-3.5 h-3.5" strokeWidth={2.25} />
-              Install the app
+              Get the app
               <ArrowUpRight className="w-3 h-3" />
             </button>
           </div>
@@ -251,6 +311,20 @@ export default function MeasurePage() {
           style={{ background: "rgba(255, 255, 255, 0.85)" }}
         />
       )}
+
+      {/* Hidden camera/file input — triggered by the Measure button. On
+          mobile, `capture="environment"` opens the rear camera directly;
+          on desktop it falls back to the standard file picker. */}
+      <input
+        ref={captureInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleCapture}
+        className="sr-only"
+        aria-hidden="true"
+        tabIndex={-1}
+      />
 
       {/* =====================================================
           Main 2-col grid: Progress/steps column  +  Stage
@@ -475,6 +549,7 @@ export default function MeasurePage() {
                   targetAsset={targetAsset}
                   result={measurementResult}
                   saveError={saveError}
+                  previewUrl={previewUrl}
                 />
               )}
             </div>
@@ -760,6 +835,7 @@ function StageCapture({
   targetAsset,
   result,
   saveError,
+  previewUrl,
 }: {
   measuring: boolean;
   measured: boolean;
@@ -768,6 +844,7 @@ function StageCapture({
   targetAsset: UiAsset | null;
   result: MeasurementResult | null;
   saveError: string | null;
+  previewUrl: string | null;
 }) {
   const noTarget = !targetAsset;
 
@@ -805,20 +882,31 @@ function StageCapture({
                   "linear-gradient(180deg, #1C1B19 0%, #0B0C0E 100%)",
               }}
             >
-              <div
-                className="absolute inset-0"
-                style={{
-                  background:
-                    "radial-gradient(ellipse at 50% 50%, rgba(50,45,38,0.4) 0%, transparent 70%)",
-                }}
-              />
-              <div className="relative z-10 w-28 h-28 rounded-[14px] bg-[#D54230] border-[3px] border-white flex items-center justify-center">
-                <div className="w-20 h-20 rounded-full border-[3px] border-white flex items-center justify-center">
-                  <span className="text-white text-[26px] font-black tabular">
-                    80
-                  </span>
-                </div>
-              </div>
+              {previewUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={previewUrl}
+                  alt="Captured asset"
+                  className="absolute inset-0 w-full h-full object-cover z-0"
+                />
+              ) : (
+                <>
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      background:
+                        "radial-gradient(ellipse at 50% 50%, rgba(50,45,38,0.4) 0%, transparent 70%)",
+                    }}
+                  />
+                  <div className="relative z-10 w-28 h-28 rounded-[14px] bg-[#D54230] border-[3px] border-white flex items-center justify-center">
+                    <div className="w-20 h-20 rounded-full border-[3px] border-white flex items-center justify-center">
+                      <span className="text-white text-[26px] font-black tabular">
+                        80
+                      </span>
+                    </div>
+                  </div>
+                </>
+              )}
               <Crosshair
                 className="absolute w-16 h-16 z-20"
                 style={{ color: "rgba(255,181,140,0.9)" }}
@@ -846,9 +934,26 @@ function StageCapture({
             background: "linear-gradient(135deg, #5EC486, #3FA364)",
           }}
         >
-          <Zap className="w-4 h-4" strokeWidth={2.2} />
-          {measuring ? "Measuring & saving…" : noTarget ? "Loading target…" : "Measure & save"}
+          {measuring ? (
+            <>
+              <Zap className="w-4 h-4" strokeWidth={2.2} />
+              Uploading & saving…
+            </>
+          ) : noTarget ? (
+            <>
+              <Zap className="w-4 h-4" strokeWidth={2.2} />
+              Loading target…
+            </>
+          ) : (
+            <>
+              <Camera className="w-4 h-4" strokeWidth={2.2} />
+              Capture photo & measure
+            </>
+          )}
         </button>
+        <p className="mt-3 text-[10.5px] text-ink/45 font-mono tabular uppercase tracking-[0.12em]">
+          opens camera on mobile · falls back to file picker on desktop
+        </p>
       </div>
     );
   }
@@ -938,23 +1043,33 @@ function StageCapture({
             className="absolute -top-12 -right-12 w-32 h-32 rounded-full blur-2xl opacity-40"
             style={{ background: "var(--color-orange)" }}
           />
-          <div className="relative">
-            <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-paper-2/55 mb-1">
-              <ShieldCheck className="w-3 h-3" />
-              Detected asset · auto-matched
-            </div>
-            <p className="text-paper-2 font-semibold text-[17px] leading-tight">
-              {targetAsset.type}
-              {targetAsset.materialGrade && (
-                <span className="text-paper-2/55 font-normal">
-                  {" "}
-                  · {targetAsset.materialGrade}
-                </span>
-              )}
-            </p>
-            <div className="mt-1.5 text-[11px] font-mono tabular text-paper-2/55">
-              {targetAsset.highway} · {targetAsset.chainage} · asset{" "}
-              {targetAsset.id}
+          <div className="relative flex items-center gap-4">
+            {(result.imageUrl || previewUrl) && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={result.imageUrl ?? previewUrl ?? undefined}
+                alt="Captured asset"
+                className="w-16 h-16 rounded-[10px] object-cover border border-white/15 shrink-0"
+              />
+            )}
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-paper-2/55 mb-1">
+                <ShieldCheck className="w-3 h-3" />
+                Detected asset · auto-matched
+              </div>
+              <p className="text-paper-2 font-semibold text-[17px] leading-tight">
+                {targetAsset.type}
+                {targetAsset.materialGrade && (
+                  <span className="text-paper-2/55 font-normal">
+                    {" "}
+                    · {targetAsset.materialGrade}
+                  </span>
+                )}
+              </p>
+              <div className="mt-1.5 text-[11px] font-mono tabular text-paper-2/55">
+                {targetAsset.highway} · {targetAsset.chainage} · asset{" "}
+                {targetAsset.id}
+              </div>
             </div>
           </div>
         </div>

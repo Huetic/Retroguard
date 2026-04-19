@@ -3,9 +3,13 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import Optional, List
 
+from auth import get_current_user, require_role
 from database import get_db
-from models import Alert
+from models import Alert, User
 from schemas import AlertResponse
+
+_any_staff = get_current_user
+_supervisor_up = require_role("supervisor", "admin")
 
 router = APIRouter(prefix="/api/alerts", tags=["Alerts"])
 
@@ -18,6 +22,7 @@ def list_alerts(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500),
     db: Session = Depends(get_db),
+    _: User = Depends(_any_staff),
 ):
     q = db.query(Alert)
     if highway_id:
@@ -33,7 +38,7 @@ def list_alerts(
 
 
 @router.put("/{alert_id}/resolve", response_model=AlertResponse)
-def resolve_alert(alert_id: int, db: Session = Depends(get_db)):
+def resolve_alert(alert_id: int, db: Session = Depends(get_db), _: User = Depends(_supervisor_up)):
     alert = db.query(Alert).filter(Alert.id == alert_id).first()
     if not alert:
         raise HTTPException(status_code=404, detail="Alert not found")
@@ -44,7 +49,7 @@ def resolve_alert(alert_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/summary")
-def alert_summary(db: Session = Depends(get_db)):
+def alert_summary(db: Session = Depends(get_db), _: User = Depends(_any_staff)):
     rows = (
         db.query(Alert.alert_type, func.count(Alert.id))
         .filter(Alert.is_resolved == False)

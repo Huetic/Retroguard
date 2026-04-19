@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   Search,
   SlidersHorizontal,
@@ -12,6 +13,11 @@ import {
   TrendingDown,
   Minus,
   Database,
+  Upload,
+  X,
+  FileSpreadsheet,
+  RefreshCw,
+  Check,
 } from "lucide-react";
 import TopBar from "../../components/TopBar";
 import { api, useApi, type UiAsset } from "../../lib/api";
@@ -28,20 +34,75 @@ const types = [
   "Delineator Post",
 ];
 
+type SortKey =
+  | "measured_desc"
+  | "measured_asc"
+  | "rl_asc"
+  | "rl_desc"
+  | "id_asc";
+
+const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+  { key: "measured_desc", label: "Last measured · newest" },
+  { key: "measured_asc", label: "Last measured · oldest" },
+  { key: "rl_asc", label: "Current RL · lowest first" },
+  { key: "rl_desc", label: "Current RL · highest first" },
+  { key: "id_asc", label: "Asset ID · A → Z" },
+];
+
+const PAGE_SIZE = 25;
+
 export default function AssetsPage() {
+  return (
+    <Suspense fallback={null}>
+      <AssetsPageInner />
+    </Suspense>
+  );
+}
+
+function AssetsPageInner() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const focusParam = searchParams.get("focus");
+  const focusId = focusParam ? Number(focusParam) : null;
+
   const [search, setSearch] = useState("");
   const [hwFilter, setHwFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
   const [typeFilter, setTypeFilter] = useState("All");
+  const [sortKey, setSortKey] = useState<SortKey>("measured_desc");
+  const [sortOpen, setSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
+  const [page, setPage] = useState(1);
 
-  const { data: assets, loading, error } = useApi<UiAsset[]>(
+  const { data: assets, loading, error, refetch } = useApi<UiAsset[]>(
     () => api.listAssets(),
     []
   );
   const allAssets: UiAsset[] = assets ?? [];
 
+  // Close sort menu on outside click
+  useEffect(() => {
+    if (!sortOpen) return;
+    const onDoc = (e: MouseEvent) => {
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
+        setSortOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [sortOpen]);
+
+  // Reset to page 1 whenever filters / sort / focus change
+  useEffect(() => {
+    setPage(1);
+  }, [search, hwFilter, statusFilter, typeFilter, sortKey, focusId]);
+
+  const focusedAsset =
+    focusId !== null ? allAssets.find((a) => a.rawId === focusId) : null;
+
   const filtered = useMemo(() => {
-    return allAssets.filter((a) => {
+    const rows = allAssets.filter((a) => {
+      if (focusId !== null) return a.rawId === focusId;
       const q = search.toLowerCase();
       const matchesSearch =
         q === "" ||
@@ -54,7 +115,35 @@ export default function AssetsPage() {
       const matchesType = typeFilter === "All" || a.type === typeFilter;
       return matchesSearch && matchesHw && matchesStatus && matchesType;
     });
-  }, [search, hwFilter, statusFilter, typeFilter, allAssets]);
+    const sorted = [...rows];
+    sorted.sort((a, b) => {
+      switch (sortKey) {
+        case "measured_desc":
+          return b.lastMeasured.localeCompare(a.lastMeasured);
+        case "measured_asc":
+          return a.lastMeasured.localeCompare(b.lastMeasured);
+        case "rl_asc":
+          return a.currentRL - b.currentRL;
+        case "rl_desc":
+          return b.currentRL - a.currentRL;
+        case "id_asc":
+          return a.id.localeCompare(b.id);
+      }
+    });
+    return sorted;
+  }, [search, hwFilter, statusFilter, typeFilter, allAssets, sortKey, focusId]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pageStart = (safePage - 1) * PAGE_SIZE;
+  const pageEnd = Math.min(pageStart + PAGE_SIZE, filtered.length);
+  const paged = filtered.slice(pageStart, pageEnd);
+  const activeSort =
+    SORT_OPTIONS.find((o) => o.key === sortKey) ?? SORT_OPTIONS[0];
+
+  const clearFocus = () => {
+    router.replace("/assets");
+  };
 
   const counts = useMemo(
     () => ({
@@ -71,6 +160,28 @@ export default function AssetsPage() {
     setHwFilter("All");
     setStatusFilter("All");
     setTypeFilter("All");
+  };
+
+  // Modal state
+  const [showAdd, setShowAdd] = useState(false);
+  const [showImport, setShowImport] = useState(false);
+
+  // Export currently-filtered rows as CSV
+  const handleExport = () => {
+    const headers = ["asset_id", "type", "highway", "chainage", "current_rl", "irc_min", "status", "last_measured"];
+    const rows = filtered.map((a) => [
+      a.id, a.type, a.highway, a.chainage, a.currentRL, a.ircMin, a.status, a.lastMeasured,
+    ]);
+    const csv = [headers, ...rows].map((r) =>
+      r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")
+    ).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `assets_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
   const filtersActive =
     search !== "" ||
@@ -113,11 +224,30 @@ export default function AssetsPage() {
             <StatusPill count={counts.warning} label="Warning" tone="caution" />
             <StatusPill count={counts.critical} label="Critical" tone="alarm" />
             <div className="w-px h-7 bg-ink/10 mx-1" />
-            <button className="pill bg-paper/60 border border-ink/5 hover:bg-paper text-ink/75 gap-2">
+            <button
+              onClick={() => refetch()}
+              title="Refresh"
+              className="pill bg-paper/60 border border-ink/5 hover:bg-paper text-ink/75 gap-2"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} strokeWidth={1.8} />
+              Refresh
+            </button>
+            <button
+              onClick={() => setShowImport(true)}
+              className="pill bg-paper/60 border border-ink/5 hover:bg-paper text-ink/75 gap-2"
+            >
+              <Upload className="w-3.5 h-3.5" strokeWidth={1.8} />
+              Import
+            </button>
+            <button
+              onClick={handleExport}
+              className="pill bg-paper/60 border border-ink/5 hover:bg-paper text-ink/75 gap-2"
+            >
               <Download className="w-3.5 h-3.5" strokeWidth={1.8} />
               Export
             </button>
             <button
+              onClick={() => setShowAdd(true)}
               className="pill text-white font-medium gap-2 shadow-[0_10px_24px_-10px_rgba(255,107,53,0.7)] hover:brightness-110"
               style={{ background: "linear-gradient(135deg, #FF8B5A, #E85A26)" }}
             >
@@ -127,6 +257,27 @@ export default function AssetsPage() {
           </div>
         </div>
       </div>
+
+      {focusId !== null && (
+        <div
+          className="mb-4 flex items-center justify-between gap-3 rounded-[12px] border border-orange/25 bg-orange/[0.07] px-4 py-2.5 rise"
+          style={{ animationDelay: "60ms" }}
+        >
+          <div className="text-[12.5px] text-orange-deep font-medium">
+            Showing asset from alert ·{" "}
+            <span className="font-mono tabular">
+              {focusedAsset ? focusedAsset.id : `#${focusId}`}
+            </span>
+          </div>
+          <button
+            onClick={clearFocus}
+            className="pill bg-paper/60 hover:bg-paper border border-ink/5 text-ink/70 gap-1.5 text-[11.5px] h-8"
+          >
+            <X className="w-3 h-3" />
+            Clear
+          </button>
+        </div>
+      )}
 
       {/* ======================================================
           Filter bar
@@ -213,10 +364,50 @@ export default function AssetsPage() {
 
         <div className="flex items-center gap-2 text-[11px] text-ink/55">
           <span>Sort</span>
-          <button className="flex items-center gap-1.5 text-[11px] font-medium text-ink/80 bg-paper/60 hover:bg-paper border border-ink/5 rounded-full h-8 px-3 transition">
-            Last measured
-            <ChevronDown className="w-3 h-3 text-ink/50" />
-          </button>
+          <div ref={sortRef} className="relative">
+            <button
+              onClick={() => setSortOpen((v) => !v)}
+              aria-haspopup="menu"
+              aria-expanded={sortOpen}
+              className="flex items-center gap-1.5 text-[11px] font-medium text-ink/80 bg-paper/60 hover:bg-paper border border-ink/5 rounded-full h-8 px-3 transition"
+            >
+              {activeSort.label}
+              <ChevronDown
+                className={`w-3 h-3 text-ink/50 transition ${
+                  sortOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+            {sortOpen && (
+              <div
+                role="menu"
+                className="absolute top-[calc(100%+6px)] right-0 z-[1500] min-w-[220px] rounded-[12px] bg-paper shadow-[0_18px_40px_-14px_rgba(28,27,25,0.2)] border border-ink/[0.06] p-1.5"
+              >
+                {SORT_OPTIONS.map((opt) => {
+                  const active = opt.key === sortKey;
+                  return (
+                    <button
+                      key={opt.key}
+                      role="menuitemradio"
+                      aria-checked={active}
+                      onClick={() => {
+                        setSortKey(opt.key);
+                        setSortOpen(false);
+                      }}
+                      className={`flex items-center justify-between w-full h-9 px-3 rounded-[9px] text-[12px] text-left transition ${
+                        active
+                          ? "bg-orange/[0.08] text-orange-deep font-medium"
+                          : "text-ink/75 hover:bg-ink/[0.04]"
+                      }`}
+                    >
+                      <span>{opt.label}</span>
+                      {active && <Check className="w-3.5 h-3.5" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -269,7 +460,7 @@ export default function AssetsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((asset) => {
+                  {paged.map((asset) => {
                     const deficit = asset.currentRL - asset.ircMin;
                     const pct = (asset.currentRL / asset.ircMin) * 100;
                     const rlTone =
@@ -368,16 +559,27 @@ export default function AssetsPage() {
               style={{ background: "rgba(246,241,229,0.35)" }}
             >
               <div className="text-[10.5px] font-mono tabular uppercase tracking-[0.14em] text-ink/50">
-                Rows 1–{filtered.length} of {filtered.length}
+                Rows {filtered.length === 0 ? 0 : pageStart + 1}–{pageEnd} of{" "}
+                {filtered.length}
               </div>
               <div className="flex items-center gap-1.5">
-                <button className="h-7 w-7 rounded-[7px] flex items-center justify-center bg-ink/[0.04] text-ink/35 hover:text-ink hover:bg-ink/[0.08] transition">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={safePage === 1}
+                  className="h-7 w-7 rounded-[7px] flex items-center justify-center bg-ink/[0.04] text-ink/35 hover:text-ink hover:bg-ink/[0.08] transition disabled:opacity-40 disabled:cursor-not-allowed"
+                  title="Previous page"
+                >
                   <ChevronDown className="w-3 h-3 rotate-90" />
                 </button>
                 <span className="text-[11px] text-ink/60 font-mono tabular px-2">
-                  page 1 / 1
+                  page {safePage} / {totalPages}
                 </span>
-                <button className="h-7 w-7 rounded-[7px] flex items-center justify-center bg-ink/[0.04] text-ink/35 hover:text-ink hover:bg-ink/[0.08] transition">
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={safePage === totalPages}
+                  className="h-7 w-7 rounded-[7px] flex items-center justify-center bg-ink/[0.04] text-ink/35 hover:text-ink hover:bg-ink/[0.08] transition disabled:opacity-40 disabled:cursor-not-allowed"
+                  title="Next page"
+                >
                   <ChevronDown className="w-3 h-3 -rotate-90" />
                 </button>
               </div>
@@ -391,6 +593,404 @@ export default function AssetsPage() {
         <span>retroguard · asset registry</span>
         <span>last sync · 14:32 IST · {counts.total} nodes</span>
       </div>
+
+      {showAdd && (
+        <AddAssetModal
+          onClose={() => setShowAdd(false)}
+          onCreated={() => {
+            setShowAdd(false);
+            refetch();
+          }}
+        />
+      )}
+      {showImport && (
+        <ImportCsvModal
+          onClose={() => setShowImport(false)}
+          onImported={() => {
+            setShowImport(false);
+            refetch();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ==========================================================
+   Add asset modal
+   ========================================================== */
+function AddAssetModal({
+  onClose,
+  onCreated,
+}: {
+  onClose: () => void;
+  onCreated: () => void;
+}) {
+  const [form, setForm] = useState({
+    asset_type: "sign",
+    highway_id: "NH-48",
+    chainage_km: "",
+    gps_lat: "",
+    gps_lon: "",
+    irc_minimum_rl: "250",
+    material_grade: "",
+    installation_date: "",
+    orientation: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const update = (k: keyof typeof form) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+      setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  const submit = async () => {
+    setErr(null);
+    setSubmitting(true);
+    try {
+      await api.createAsset({
+        asset_type: form.asset_type,
+        highway_id: form.highway_id,
+        chainage_km: parseFloat(form.chainage_km),
+        gps_lat: parseFloat(form.gps_lat),
+        gps_lon: parseFloat(form.gps_lon),
+        irc_minimum_rl: parseFloat(form.irc_minimum_rl),
+        material_grade: form.material_grade || null,
+        installation_date: form.installation_date
+          ? new Date(form.installation_date).toISOString()
+          : null,
+        orientation: form.orientation || null,
+      });
+      onCreated();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <ModalShell title="Add asset" onClose={onClose}>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Asset type">
+          <select
+            className="w-full bg-paper/60 border border-ink/10 rounded-lg h-9 px-2 text-[13px]"
+            value={form.asset_type}
+            onChange={update("asset_type")}
+          >
+            <option value="sign">Sign</option>
+            <option value="marking">Marking</option>
+            <option value="rpm">RPM</option>
+            <option value="delineator">Delineator</option>
+          </select>
+        </Field>
+        <Field label="Highway ID">
+          <input className={inputCls} value={form.highway_id} onChange={update("highway_id")} />
+        </Field>
+        <Field label="Chainage (km)">
+          <input className={inputCls} value={form.chainage_km} onChange={update("chainage_km")} placeholder="234.5" />
+        </Field>
+        <Field label="IRC minimum R_L">
+          <input className={inputCls} value={form.irc_minimum_rl} onChange={update("irc_minimum_rl")} />
+        </Field>
+        <Field label="GPS lat">
+          <input className={inputCls} value={form.gps_lat} onChange={update("gps_lat")} placeholder="21.1700" />
+        </Field>
+        <Field label="GPS lon">
+          <input className={inputCls} value={form.gps_lon} onChange={update("gps_lon")} placeholder="72.8311" />
+        </Field>
+        <Field label="Material grade">
+          <input className={inputCls} value={form.material_grade} onChange={update("material_grade")} placeholder="high_intensity" />
+        </Field>
+        <Field label="Installation date">
+          <input type="date" className={inputCls} value={form.installation_date} onChange={update("installation_date")} />
+        </Field>
+        <Field label="Orientation">
+          <input className={inputCls} value={form.orientation} onChange={update("orientation")} placeholder="left / right / overhead" />
+        </Field>
+      </div>
+      {err && <div className="mt-3 text-[12px] text-alarm">{err}</div>}
+      <div className="mt-5 flex items-center justify-end gap-2">
+        <button onClick={onClose} className="pill bg-paper/60 border border-ink/5 hover:bg-paper text-ink/75">
+          Cancel
+        </button>
+        <button
+          disabled={submitting}
+          onClick={submit}
+          className="pill text-white font-medium shadow-[0_10px_24px_-10px_rgba(255,107,53,0.7)] disabled:opacity-50"
+          style={{ background: "linear-gradient(135deg, #FF8B5A, #E85A26)" }}
+        >
+          {submitting ? "Creating…" : "Create asset"}
+        </button>
+      </div>
+    </ModalShell>
+  );
+}
+
+/* ==========================================================
+   Import CSV modal
+   ========================================================== */
+function ImportCsvModal({
+  onClose,
+  onImported,
+}: {
+  onClose: () => void;
+  onImported: () => void;
+}) {
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [result, setResult] = useState<{
+    created: number;
+    skipped: number;
+    errors: { row: number; reason: string }[];
+    duplicates: {
+      row: number;
+      matched_asset_id: number | null;
+      data: Record<string, unknown>;
+    }[];
+  } | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [dupSelected, setDupSelected] = useState<Set<number>>(new Set());
+  const [forcing, setForcing] = useState(false);
+
+  const submit = async () => {
+    if (!file) return;
+    setErr(null);
+    setSubmitting(true);
+    try {
+      const res = await api.importAssetsCsv(file);
+      setResult(res);
+      setDupSelected(new Set());
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const toggleDup = (row: number) => {
+    setDupSelected((s) => {
+      const next = new Set(s);
+      if (next.has(row)) next.delete(row);
+      else next.add(row);
+      return next;
+    });
+  };
+
+  const forceInsertSelected = async () => {
+    if (!result || dupSelected.size === 0) return;
+    setForcing(true);
+    setErr(null);
+    try {
+      const rows = result.duplicates
+        .filter((d) => dupSelected.has(d.row))
+        .map((d) => d.data);
+      const res = await api.forceImportAssets(rows);
+      // Update result locally so the UI reflects success
+      setResult({
+        ...result,
+        created: result.created + res.created,
+        duplicates: result.duplicates.filter((d) => !dupSelected.has(d.row)),
+      });
+      setDupSelected(new Set());
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setForcing(false);
+    }
+  };
+
+  return (
+    <ModalShell title="Import assets from CSV" onClose={onClose}>
+      {!result ? (
+        <>
+          <p className="text-[12.5px] text-ink/65 mb-3">
+            Upload a CSV with one row per asset. Invalid rows are skipped, not blocking.
+          </p>
+          <a
+            href={api.assetImportTemplateUrl()}
+            className="inline-flex items-center gap-1.5 text-[12px] text-orange hover:underline mb-4"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5" />
+            Download CSV template
+          </a>
+          <div
+            onClick={() => fileInput.current?.click()}
+            className="border border-dashed border-ink/20 rounded-xl p-6 cursor-pointer hover:bg-paper/40 text-center"
+          >
+            <Upload className="w-5 h-5 text-ink/50 mx-auto mb-2" />
+            <div className="text-[13px] text-ink/70">
+              {file ? file.name : "Click to choose a .csv file"}
+            </div>
+          </div>
+          <input
+            ref={fileInput}
+            type="file"
+            accept=".csv"
+            hidden
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+          />
+          {err && <div className="mt-3 text-[12px] text-alarm">{err}</div>}
+          <div className="mt-5 flex items-center justify-end gap-2">
+            <button onClick={onClose} className="pill bg-paper/60 border border-ink/5 hover:bg-paper text-ink/75">
+              Cancel
+            </button>
+            <button
+              onClick={submit}
+              disabled={!file || submitting}
+              className="pill text-white font-medium shadow-[0_10px_24px_-10px_rgba(255,107,53,0.7)] disabled:opacity-50"
+              style={{ background: "linear-gradient(135deg, #FF8B5A, #E85A26)" }}
+            >
+              {submitting ? "Uploading…" : "Upload"}
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="flex items-center gap-3 mb-4">
+            <StatBlock label="Created" value={result.created} tone="go" />
+            <StatBlock label="Duplicates" value={result.duplicates.length} tone="caution" />
+            <StatBlock label="Errors" value={result.errors.length} tone="caution" />
+          </div>
+
+          {result.duplicates.length > 0 && (
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-[12px] text-ink/70 font-medium">
+                  Duplicates — review and override if needed
+                </div>
+                <button
+                  onClick={forceInsertSelected}
+                  disabled={dupSelected.size === 0 || forcing}
+                  className="pill text-white text-[11px] font-medium disabled:opacity-40"
+                  style={{ background: "linear-gradient(135deg, #FF8B5A, #E85A26)" }}
+                >
+                  {forcing
+                    ? "Inserting…"
+                    : `Insert selected (${dupSelected.size})`}
+                </button>
+              </div>
+              <div className="max-h-[240px] overflow-y-auto border border-ink/10 rounded-lg divide-y divide-ink/5">
+                {result.duplicates.map((d) => (
+                  <label
+                    key={d.row}
+                    className="flex items-start gap-2 px-3 py-2 text-[12px] cursor-pointer hover:bg-paper/40"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={dupSelected.has(d.row)}
+                      onChange={() => toggleDup(d.row)}
+                      className="mt-0.5"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-ink/60">row {d.row}</span>
+                        {d.matched_asset_id !== null ? (
+                          <span className="text-ink/60">
+                            matches existing asset{" "}
+                            <span className="font-mono">#{d.matched_asset_id}</span>
+                          </span>
+                        ) : (
+                          <span className="text-ink/60">duplicate within file</span>
+                        )}
+                      </div>
+                      <div className="text-[11px] text-ink/50 truncate">
+                        {String(d.data.asset_type)} · {String(d.data.highway_id)} · km{" "}
+                        {String(d.data.chainage_km)}
+                      </div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+              <div className="mt-2 text-[10.5px] text-ink/45">
+                Tick a row only if you&rsquo;re sure it&rsquo;s a separate physical asset.
+              </div>
+            </div>
+          )}
+
+          {result.errors.length > 0 && (
+            <>
+              <div className="text-[12px] text-ink/70 mb-2 font-medium">Row errors</div>
+              <div className="max-h-[160px] overflow-y-auto border border-ink/10 rounded-lg divide-y divide-ink/5">
+                {result.errors.map((e) => (
+                  <div key={e.row} className="px-3 py-2 text-[12px]">
+                    <span className="font-mono text-ink/60">row {e.row}</span>
+                    <span className="text-ink/80 ml-2">{e.reason}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {err && <div className="mt-3 text-[12px] text-alarm">{err}</div>}
+
+          <div className="mt-5 flex items-center justify-end">
+            <button
+              onClick={onImported}
+              className="pill text-white font-medium shadow-[0_10px_24px_-10px_rgba(255,107,53,0.7)]"
+              style={{ background: "linear-gradient(135deg, #FF8B5A, #E85A26)" }}
+            >
+              Done
+            </button>
+          </div>
+        </>
+      )}
+    </ModalShell>
+  );
+}
+
+/* ==========================================================
+   Modal shell + small helpers
+   ========================================================== */
+const inputCls =
+  "w-full bg-paper/60 border border-ink/10 rounded-lg h-9 px-2 text-[13px] focus:outline-none focus:border-orange/60";
+
+function ModalShell({
+  title,
+  onClose,
+  children,
+}: {
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-[3000] flex items-center justify-center bg-ink/60 backdrop-blur-sm p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-paper rounded-2xl shadow-2xl w-full max-w-[560px] max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="px-5 py-4 border-b border-ink/5 flex items-center justify-between">
+          <div className="text-[15px] font-semibold text-ink">{title}</div>
+          <button onClick={onClose} className="w-8 h-8 rounded-full hover:bg-ink/5 flex items-center justify-center text-ink/60">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        <div className="px-5 py-4">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="flex flex-col gap-1">
+      <span className="text-[10.5px] uppercase tracking-[0.14em] text-ink/55 font-medium">{label}</span>
+      {children}
+    </label>
+  );
+}
+
+function StatBlock({ label, value, tone }: { label: string; value: number; tone: "go" | "caution" }) {
+  const color = tone === "go" ? "#5EC486" : "#F3AD3C";
+  return (
+    <div className="flex-1 rounded-xl bg-paper/60 border border-ink/5 p-3">
+      <div className="text-[11px] text-ink/55 uppercase tracking-[0.14em]">{label}</div>
+      <div className="text-[28px] font-semibold" style={{ color }}>{value}</div>
     </div>
   );
 }

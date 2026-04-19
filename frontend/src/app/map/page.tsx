@@ -9,14 +9,17 @@ import {
   Plus,
   ArrowUpRight,
   Search,
-  Bell,
-  Moon,
   Radio,
   TrendingDown,
   ChevronRight,
   RefreshCw,
 } from "lucide-react";
 import { api, useApi, type UiAsset } from "../../lib/api";
+import type {
+  MapController,
+  Basemap,
+} from "../../components/MapComponent";
+import { openGlobalSearch } from "../../components/SearchCommand";
 
 const MapComponent = dynamic(() => import("../../components/MapComponent"), {
   ssr: false,
@@ -48,6 +51,10 @@ const highwayNames: Record<string, string> = {
 
 export default function MapPage() {
   const [activeHighway, setActiveHighway] = useState<string>("all");
+
+  // Imperative handle for Layers / Center / Fullscreen dock tools
+  const mapControllerRef = useRef<MapController | null>(null);
+  const [currentBasemap, setCurrentBasemap] = useState<Basemap>("street");
 
   const { data: assets, loading } = useApi<UiAsset[]>(
     () => api.listAssets(),
@@ -169,7 +176,13 @@ export default function MapPage() {
       {/* =================== MAP FILLS FULL VIEWPORT =================== */}
       {/* Fixed so it extends behind the sidebar too — the glass tray can then blur it */}
       <div className="fixed inset-0 z-0">
-        <MapComponent assets={filteredAssets} center={[25.0, 82.0]} zoom={5} />
+        <MapComponent
+          assets={filteredAssets}
+          center={[25.0, 82.0]}
+          zoom={5}
+          controllerRef={mapControllerRef}
+          initialBasemap={currentBasemap}
+        />
       </div>
 
       {/* =================== GLASS OVERLAYS =================== */}
@@ -200,8 +213,12 @@ export default function MapPage() {
           <span className="truncate">Corridor map</span>
         </div>
 
-        {/* Search — flex-1 so it grows to fill available width */}
-        <button className="glass-chip h-10 px-4 rounded-full flex items-center gap-2 text-[12px] text-ink/60 flex-1 min-w-[180px] hover:text-ink transition">
+        {/* Search — opens the global command palette */}
+        <button
+          onClick={() => openGlobalSearch()}
+          className="glass-chip h-10 px-4 rounded-full flex items-center gap-2 text-[12px] text-ink/60 flex-1 min-w-[180px] hover:text-ink transition"
+          title="Search (⌘K)"
+        >
           <Search className="w-[15px] h-[15px] shrink-0" strokeWidth={1.8} />
           <span className="truncate">Search asset, km, highway, alert id…</span>
           <span className="ml-auto shrink-0 flex items-center gap-1 text-[10px] font-mono tabular text-ink/40 border border-ink/10 rounded-md px-1.5 py-[1px]">
@@ -234,21 +251,12 @@ export default function MapPage() {
           <span>14:32 IST</span>
         </div>
 
-        {/* Right: tools + account */}
+        {/* Right: account */}
         <div className="flex items-center gap-2 shrink-0">
-          <button className="glass-chip w-10 h-10 rounded-full flex items-center justify-center text-ink/65 hover:text-ink transition">
-            <Moon className="w-[15px] h-[15px]" strokeWidth={1.8} />
-          </button>
-          <button className="glass-chip w-10 h-10 rounded-full flex items-center justify-center text-ink/65 hover:text-ink transition relative">
-            <Bell className="w-[15px] h-[15px]" strokeWidth={1.8} />
-            <span
-              className="absolute top-2.5 right-3 w-1.5 h-1.5 rounded-full"
-              style={{ background: "var(--color-orange)" }}
-            />
-          </button>
           <div
             className="w-10 h-10 rounded-full flex items-center justify-center text-[11px] font-semibold text-ink shadow-[0_4px_12px_-4px_rgba(255,107,53,0.6)]"
             style={{ background: "linear-gradient(135deg, #FFB58C, #FF6B35)" }}
+            title="Madhav Dogra · Chief Engineer · Western"
           >
             MD
           </div>
@@ -540,9 +548,28 @@ export default function MapPage() {
       >
         {/* Map tool icons row */}
         <div className="flex items-center gap-1 justify-between px-1 pt-0.5">
-          <DockTool icon={Layers}    label="Layers" />
-          <DockTool icon={Locate}    label="Center on India" />
-          <DockTool icon={Maximize2} label="Fullscreen" />
+          <DockTool
+            icon={Layers}
+            label={`Basemap · ${currentBasemap}`}
+            onClick={() => {
+              const order: Basemap[] = ["street", "satellite", "terrain"];
+              const next =
+                order[(order.indexOf(currentBasemap) + 1) % order.length];
+              setCurrentBasemap(next);
+              mapControllerRef.current?.setBasemap(next);
+            }}
+            active={currentBasemap !== "street"}
+          />
+          <DockTool
+            icon={Locate}
+            label="Center on India"
+            onClick={() => mapControllerRef.current?.recenter()}
+          />
+          <DockTool
+            icon={Maximize2}
+            label="Fullscreen"
+            onClick={() => mapControllerRef.current?.toggleFullscreen()}
+          />
         </div>
 
         {/* Divider */}
@@ -643,15 +670,24 @@ function CorridorChip({
 function DockTool({
   icon: Icon,
   label,
+  onClick,
+  active,
 }: {
   icon: React.ElementType;
   label: string;
+  onClick?: () => void;
+  active?: boolean;
 }) {
   return (
     <button
+      onClick={onClick}
       aria-label={label}
       title={label}
-      className="w-10 h-10 rounded-[11px] flex items-center justify-center text-ink/65 hover:text-ink hover:bg-ink/[0.06] transition"
+      className={`w-10 h-10 rounded-[11px] flex items-center justify-center transition ${
+        active
+          ? "text-orange-deep bg-orange/[0.12]"
+          : "text-ink/65 hover:text-ink hover:bg-ink/[0.06]"
+      }`}
     >
       <Icon className="w-[15px] h-[15px]" strokeWidth={1.8} />
     </button>

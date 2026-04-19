@@ -61,6 +61,21 @@ export interface ApiMeasurement {
   image_path: string | null;
 }
 
+export interface ApiUpload {
+  image_path: string;
+  filename: string;
+  size_bytes: number;
+  content_type: string;
+}
+
+export interface UploadResult {
+  imagePath: string;   // server-relative, e.g. "/uploads/20260417_...jpg"
+  imageUrl: string;    // fully-qualified URL for <img src>
+  filename: string;
+  sizeBytes: number;
+  contentType: string;
+}
+
 export interface ApiDashboardStats {
   total_assets: number;
   compliant_count: number;
@@ -84,6 +99,66 @@ export interface ApiAlertSummary {
   warning: number;
   info: number;
   total: number;
+}
+
+export interface ApiRiskRow {
+  asset_id: number;
+  highway_id: string;
+  chainage_km: number;
+  asset_type: string;
+  current_rl: number | null;
+  irc_minimum_rl: number;
+  status: string;
+  days_to_failure: number | null;
+  predicted_failure_date: string | null;
+  forecast_age_hours: number | null;
+}
+
+export interface ApiContributor {
+  id: number;
+  name: string;
+  contributor_type: string;
+  trust_level: number;
+  contact_email: string | null;
+  notes: string | null;
+  active: boolean;
+  created_at: string;
+  last_used_at: string | null;
+}
+
+export interface ApiContributorWithKey extends ApiContributor {
+  api_key: string;
+}
+
+export interface ApiReferencePatch {
+  id: number;
+  label: string;
+  known_rl: number;
+  color: string;
+  material_grade: string | null;
+  deployed_at_lat: number | null;
+  deployed_at_lon: number | null;
+  highway_id: string | null;
+  chainage_km: number | null;
+  installation_date: string | null;
+  certification_ref: string | null;
+  notes: string | null;
+  active: boolean;
+  created_at: string;
+}
+
+export interface ApiJobRun {
+  id: number;
+  source_type: string;
+  status: "queued" | "running" | "done" | "failed";
+  asset_id: number | null;
+  measurements_created: number;
+  params_json: string | null;
+  result_json: string | null;
+  error: string | null;
+  created_at: string;
+  started_at: string | null;
+  finished_at: string | null;
 }
 
 export interface ApiComplianceReport {
@@ -294,10 +369,14 @@ async function fetchJson<T>(
   init?: RequestInit
 ): Promise<T> {
   const url = `${API_BASE}${path}`;
+  // Attach stored JWT if present
+  const token = typeof window !== "undefined" ? localStorage.getItem("retroguard_token") : null;
+  const authHeader: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
   const res = await fetch(url, {
     headers: {
       "Content-Type": "application/json",
-      ...(init?.headers ?? {}),
+      ...authHeader,
+      ...(init?.headers as Record<string, string> | undefined ?? {}),
     },
     ...init,
   });
@@ -394,11 +473,254 @@ export const api = {
     confidence?: number;
     source_layer: SourceLayer;
     device_info?: string;
+    image_path?: string;
   }): Promise<ApiMeasurement> {
     return fetchJson<ApiMeasurement>(`/api/measurements`, {
       method: "POST",
       body: JSON.stringify(payload),
     });
+  },
+  recentMeasurements: () =>
+    fetchJson<ApiMeasurement[]>(`/api/measurements/recent`),
+
+  // Asset onboarding
+  async createAsset(payload: {
+    asset_type: string;
+    highway_id: string;
+    chainage_km: number;
+    gps_lat: number;
+    gps_lon: number;
+    irc_minimum_rl: number;
+    material_grade?: string | null;
+    installation_date?: string | null;
+    orientation?: string | null;
+  }): Promise<ApiAsset> {
+    return fetchJson<ApiAsset>(`/api/assets`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  async importAssetsCsv(file: File): Promise<{
+    created: number;
+    skipped: number;
+    errors: { row: number; reason: string }[];
+    duplicates: {
+      row: number;
+      matched_asset_id: number | null;
+      data: Record<string, unknown>;
+    }[];
+  }> {
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch(`${API_BASE}/api/assets/import`, {
+      method: "POST",
+      body: fd,
+    });
+    if (!res.ok) {
+      let detail: string | undefined;
+      try { detail = (await res.json()).detail; } catch { /* ignore */ }
+      throw new ApiError(`import → ${res.status}${detail ? ` · ${detail}` : ""}`, res.status);
+    }
+    return res.json();
+  },
+  async forceImportAssets(rows: Record<string, unknown>[]): Promise<{
+    created: number;
+    ids: number[];
+  }> {
+    return fetchJson(`/api/assets/import/force`, {
+      method: "POST",
+      body: JSON.stringify(rows),
+    });
+  },
+  assetImportTemplateUrl: () => `${API_BASE}/api/assets/import/template`,
+
+  // Ingestion jobs (Layer 2 CCTV / Layer 4 dashcam)
+  async enqueueVideoIngest(payload: {
+    file: File;
+    asset_id: number;
+    source_layer: "cctv" | "dashcam";
+    every_n_seconds?: number;
+    max_frames?: number;
+  }): Promise<ApiJobRun> {
+    const fd = new FormData();
+    fd.append("file", payload.file);
+    fd.append("asset_id", String(payload.asset_id));
+    fd.append("source_layer", payload.source_layer);
+    if (payload.every_n_seconds !== undefined)
+      fd.append("every_n_seconds", String(payload.every_n_seconds));
+    if (payload.max_frames !== undefined)
+      fd.append("max_frames", String(payload.max_frames));
+    const res = await fetch(`${API_BASE}/api/ingest/video`, {
+      method: "POST",
+      body: fd,
+    });
+    if (!res.ok) {
+      let detail: string | undefined;
+      try { detail = (await res.json()).detail; } catch { /* ignore */ }
+      throw new ApiError(`ingest → ${res.status}${detail ? ` · ${detail}` : ""}`, res.status);
+    }
+    return res.json();
+  },
+  listJobs: (limit = 50) =>
+    fetchJson<ApiJobRun[]>(`/api/ingest/jobs?limit=${limit}`),
+  getJob: (id: number) =>
+    fetchJson<ApiJobRun>(`/api/ingest/jobs/${id}`),
+
+  // Reference patches (Layer 3)
+  listPatches: (activeOnly = false) =>
+    fetchJson<ApiReferencePatch[]>(
+      `/api/patches${activeOnly ? "?active=true" : ""}`
+    ),
+  createPatch: (p: Omit<ApiReferencePatch, "id" | "created_at">) =>
+    fetchJson<ApiReferencePatch>(`/api/patches`, {
+      method: "POST",
+      body: JSON.stringify(p),
+    }),
+  updatePatch: (id: number, p: Partial<Omit<ApiReferencePatch, "id" | "created_at">>) =>
+    fetchJson<ApiReferencePatch>(`/api/patches/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(p),
+    }),
+  deletePatch: async (id: number) => {
+    const res = await fetch(`${API_BASE}/api/patches/${id}`, { method: "DELETE" });
+    if (!res.ok) throw new ApiError(`delete patch → ${res.status}`, res.status);
+  },
+  // Forecasts (Layer 5)
+  refreshForecasts: (highway_id?: string) =>
+    fetchJson<ApiJobRun>(
+      `/api/forecast/refresh${highway_id ? `?highway_id=${encodeURIComponent(highway_id)}` : ""}`,
+      { method: "POST" }
+    ),
+  riskRegister: (filters?: { highway_id?: string; within_days?: number; limit?: number }) =>
+    fetchJson<ApiRiskRow[]>(`/api/forecast/risk-register${qs(filters as Record<string, string | number | undefined>)}`),
+
+  // QR (Layer 6)
+  bulkQrPdfUrl: (highway_id?: string) =>
+    `${API_BASE}/api/qr/bulk/pdf${highway_id ? `?highway_id=${encodeURIComponent(highway_id)}` : ""}`,
+  qrScanMeasurement: (body: {
+    payload: string;
+    rl_value: number;
+    confidence?: number;
+    device_info?: string;
+  }) =>
+    fetchJson<{ measurement_id: number; asset_id: number; rl_value: number; new_status: string }>(
+      `/api/qr/scan-measurement`,
+      { method: "POST", body: JSON.stringify(body) }
+    ),
+  qrPayloadUrl: (asset_id: number) => `${API_BASE}/api/qr/${asset_id}/payload`,
+  qrImageUrl: (asset_id: number) => `${API_BASE}/api/qr/${asset_id}/image`,
+
+  // Contributors (Layer 4)
+  listContributors: () =>
+    fetchJson<ApiContributor[]>(`/api/contributors`),
+  createContributor: (p: {
+    name: string;
+    contributor_type: "fleet" | "civic" | "individual" | "partner";
+    trust_level?: number;
+    contact_email?: string | null;
+    notes?: string | null;
+  }) =>
+    fetchJson<ApiContributorWithKey>(`/api/contributors`, {
+      method: "POST",
+      body: JSON.stringify(p),
+    }),
+  updateContributor: (id: number, p: Partial<{
+    name: string;
+    contributor_type: string;
+    trust_level: number;
+    contact_email: string | null;
+    notes: string | null;
+    active: boolean;
+  }>) =>
+    fetchJson<ApiContributor>(`/api/contributors/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(p),
+    }),
+  rotateContributorKey: (id: number) =>
+    fetchJson<ApiContributorWithKey>(`/api/contributors/${id}/rotate-key`, {
+      method: "POST",
+    }),
+  deleteContributor: async (id: number) => {
+    const res = await fetch(`${API_BASE}/api/contributors/${id}`, { method: "DELETE" });
+    if (!res.ok) throw new ApiError(`delete contributor → ${res.status}`, res.status);
+  },
+
+  calibratedRL: (payload: {
+    sign_brightness: number;
+    patch_brightness: number;
+    patch_id: number;
+    distance?: number;
+    angle?: number;
+  }) =>
+    fetchJson<{
+      rl_value: number;
+      calibration_factor: number;
+      patch_id: number;
+      patch_known_rl: number;
+      patch_brightness: number;
+      sign_brightness: number;
+      classification: { status: string; rl_rounded: number } | null;
+    }>(`/api/patches/calibrated-rl`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  // Uploads — POST multipart image, receive stored public path
+  async uploadImage(file: File | Blob, filename?: string): Promise<UploadResult> {
+    const form = new FormData();
+    form.append("file", file, filename ?? (file instanceof File ? file.name : "capture.jpg"));
+    const res = await fetch(`${API_BASE}/api/uploads`, {
+      method: "POST",
+      body: form,
+    });
+    if (!res.ok) {
+      let detail: string | undefined;
+      try {
+        const j = await res.json();
+        detail = j.detail ?? j.message;
+      } catch {
+        /* ignore */
+      }
+      throw new ApiError(
+        `/api/uploads → ${res.status}${detail ? ` · ${detail}` : ""}`,
+        res.status
+      );
+    }
+    const data = (await res.json()) as ApiUpload;
+    return {
+      imagePath: data.image_path,
+      imageUrl: `${API_BASE}${data.image_path}`,
+      filename: data.filename,
+      sizeBytes: data.size_bytes,
+      contentType: data.content_type,
+    };
+  },
+
+  // Auth / Users (staff management)
+  login: (username: string, password: string) =>
+    fetchJson<{ access_token: string; token_type: string; user: import("./auth").AuthUser }>(
+      `/api/auth/login`,
+      { method: "POST", body: JSON.stringify({ username, password }) }
+    ),
+  me: () =>
+    fetchJson<import("./auth").AuthUser>(`/api/auth/me`),
+  listUsers: () =>
+    fetchJson<import("./auth").AuthUser[]>(`/api/users`),
+  createUser: (payload: { username: string; password: string; role: string; email?: string }) =>
+    fetchJson<import("./auth").AuthUser>(`/api/users`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  updateUser: (id: number, payload: { role?: string; active?: boolean; email?: string }) =>
+    fetchJson<import("./auth").AuthUser>(`/api/users/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    }),
+  deleteUser: async (id: number) => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("retroguard_token") : null;
+    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+    const res = await fetch(`${API_BASE}/api/users/${id}`, { method: "DELETE", headers });
+    if (!res.ok) throw new ApiError(`delete user → ${res.status}`, res.status);
   },
 
   // Reports
