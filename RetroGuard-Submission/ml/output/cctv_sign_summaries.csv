@@ -1,4 +1,0 @@
-sign_id,sign_type,true_rl,n_measurements,median_brightness,std_brightness,estimated_rl,confidence_interval,irc_minimum,status,recommendation
-SIGN-001,Regulatory Sign,181.09,63,57.74,11.3,144.35,"[88.97, 199.73]",250.0,warning,Schedule replacement within 90 days. RL is below IRC minimum but still partially effective.
-SIGN-002,Regulatory Sign,114.2,84,45.27,9.57,113.17,"[66.29, 160.06]",250.0,critical,Immediate replacement required. Retroreflectivity is severely degraded — safety hazard.
-SIGN-003,Warning Sign,258.9,84,111.13,26.41,277.83,"[148.42, 407.25]",250.0,compliant,No action required. Next scheduled inspection.

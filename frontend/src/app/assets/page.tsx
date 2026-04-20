@@ -162,15 +162,9 @@ function AssetsPageInner() {
     setTypeFilter("All");
   };
 
-  // Modal state — honour ?add=1 deeplink (e.g. from /map)
-  const [showAdd, setShowAdd] = useState(searchParams.get("add") === "1");
+  // Modal state
+  const [showAdd, setShowAdd] = useState(false);
   const [showImport, setShowImport] = useState(false);
-
-  // If the deeplink fires after first render (nav without full reload),
-  // still open the modal.
-  useEffect(() => {
-    if (searchParams.get("add") === "1") setShowAdd(true);
-  }, [searchParams]);
 
   // Export currently-filtered rows as CSV
   const handleExport = () => {
@@ -602,14 +596,9 @@ function AssetsPageInner() {
 
       {showAdd && (
         <AddAssetModal
-          initialHighway={searchParams.get("highway") ?? undefined}
-          onClose={() => {
-            setShowAdd(false);
-            if (searchParams.get("add") === "1") router.replace("/assets");
-          }}
+          onClose={() => setShowAdd(false)}
           onCreated={() => {
             setShowAdd(false);
-            if (searchParams.get("add") === "1") router.replace("/assets");
             refetch();
           }}
         />
@@ -633,15 +622,13 @@ function AssetsPageInner() {
 function AddAssetModal({
   onClose,
   onCreated,
-  initialHighway,
 }: {
   onClose: () => void;
   onCreated: () => void;
-  initialHighway?: string;
 }) {
   const [form, setForm] = useState({
     asset_type: "sign",
-    highway_id: initialHighway || "NH-48",
+    highway_id: "NH-48",
     chainage_km: "",
     gps_lat: "",
     gps_lon: "",

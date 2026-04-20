@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
+  Moon,
+  Sun,
   Calendar,
   ChevronDown,
   Check,
@@ -32,6 +34,29 @@ export default function TopBar({
 }) {
   const { user, signOut } = useAuth();
 
+  // ---------- Theme (dark mode) ----------
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+  useEffect(() => {
+    const stored = (typeof window !== "undefined" &&
+      (localStorage.getItem("retroguard-theme") as
+        | "light"
+        | "dark"
+        | null)) || "light";
+    setTheme(stored);
+    document.documentElement.setAttribute("data-theme", stored);
+  }, []);
+
+  const toggleTheme = () => {
+    const next = theme === "light" ? "dark" : "light";
+    setTheme(next);
+    document.documentElement.setAttribute("data-theme", next);
+    try {
+      localStorage.setItem("retroguard-theme", next);
+    } catch {
+      /* ignore */
+    }
+  };
+
   // ---------- Timeframe dropdown ----------
   const [tf, setTf] = useState<TimeframeKey>("30d");
   const [tfOpen, setTfOpen] = useState(false);
@@ -50,7 +75,7 @@ export default function TopBar({
   }, [tfOpen]);
 
   return (
-    <div className="relative z-[1400] flex items-center justify-between mb-6 rise">
+    <div className="flex items-center justify-between mb-6 rise">
       <div className="flex items-center gap-2 text-[12px] text-ink/60 min-w-0">
         {crumbs.map((c, i) => (
           <span key={i} className="flex items-center gap-2 min-w-0">
@@ -118,6 +143,20 @@ export default function TopBar({
             </div>
           )}
         </div>
+
+        {/* Dark mode toggle */}
+        <button
+          onClick={toggleTheme}
+          aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          title={theme === "dark" ? "Light mode" : "Dark mode"}
+          className="pill bg-paper/60 hover:bg-paper text-ink/65 border border-ink/5 w-10 !px-0 transition"
+        >
+          {theme === "dark" ? (
+            <Sun className="w-[15px] h-[15px]" strokeWidth={1.8} />
+          ) : (
+            <Moon className="w-[15px] h-[15px]" strokeWidth={1.8} />
+          )}
+        </button>
 
         <NotificationsBell />
         {user && (

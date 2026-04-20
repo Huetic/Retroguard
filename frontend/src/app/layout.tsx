@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import AppShell from "../components/AppShell";
+import Sidebar from "../components/Sidebar";
+import SearchCommand from "../components/SearchCommand";
 import { AuthProvider } from "../lib/AuthProvider";
 
 const geistSans = Geist({
@@ -38,8 +39,26 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full text-ink">
+        {/* Glass tray behind the left sidebar — visible on every page */}
+        <div
+          aria-hidden
+          className="fixed top-0 left-0 bottom-0 w-[272px] z-[1100] pointer-events-none"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(251,247,236,0.62) 0%, rgba(251,247,236,0.48) 100%)",
+            backdropFilter: "blur(22px) saturate(170%)",
+            WebkitBackdropFilter: "blur(22px) saturate(170%)",
+            boxShadow:
+              "inset -1px 0 0 rgba(255,255,255,0.30), inset 0 1px 0 rgba(255,255,255,0.55)",
+          }}
+        />
         <AuthProvider>
-          <AppShell>{children}</AppShell>
+          <div className="flex gap-3 p-3 min-h-screen">
+            <Sidebar />
+            <main className="flex-1 min-w-0">{children}</main>
+          </div>
+          {/* Global search modal — opens via ⌘K or openGlobalSearch() */}
+          <SearchCommand />
         </AuthProvider>
       </body>
     </html>
