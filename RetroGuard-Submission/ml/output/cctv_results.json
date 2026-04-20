@@ -1,0 +1,4212 @@
+{
+  "measurements": [
+    {
+      "frame": 0,
+      "timestamp": 0.0,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 53.2,
+      "headlight_distance": 699.7,
+      "headlight_position": [
+        530,
+        602
+      ]
+    },
+    {
+      "frame": 0,
+      "timestamp": 0.0,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 47.61,
+      "headlight_distance": 528.2,
+      "headlight_position": [
+        530,
+        602
+      ]
+    },
+    {
+      "frame": 0,
+      "timestamp": 0.0,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 97.22,
+      "headlight_distance": 501.7,
+      "headlight_position": [
+        530,
+        602
+      ]
+    },
+    {
+      "frame": 1,
+      "timestamp": 0.04,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 49.63,
+      "headlight_distance": 691.5,
+      "headlight_position": [
+        659,
+        457
+      ]
+    },
+    {
+      "frame": 1,
+      "timestamp": 0.04,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 37.56,
+      "headlight_distance": 449.2,
+      "headlight_position": [
+        659,
+        457
+      ]
+    },
+    {
+      "frame": 1,
+      "timestamp": 0.04,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 172.05,
+      "headlight_distance": 329.6,
+      "headlight_position": [
+        659,
+        457
+      ]
+    },
+    {
+      "frame": 2,
+      "timestamp": 0.08,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 65.08,
+      "headlight_distance": 542.5,
+      "headlight_position": [
+        258,
+        569
+      ]
+    },
+    {
+      "frame": 2,
+      "timestamp": 0.08,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 44.97,
+      "headlight_distance": 499.6,
+      "headlight_position": [
+        258,
+        569
+      ]
+    },
+    {
+      "frame": 2,
+      "timestamp": 0.08,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 70.85,
+      "headlight_distance": 623.0,
+      "headlight_position": [
+        258,
+        569
+      ]
+    },
+    {
+      "frame": 8,
+      "timestamp": 0.32,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 48.21,
+      "headlight_distance": 544.2,
+      "headlight_position": [
+        800,
+        459
+      ]
+    },
+    {
+      "frame": 8,
+      "timestamp": 0.32,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 120.06,
+      "headlight_distance": 343.9,
+      "headlight_position": [
+        800,
+        459
+      ]
+    },
+    {
+      "frame": 9,
+      "timestamp": 0.36,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 64.72,
+      "headlight_distance": 622.3,
+      "headlight_position": [
+        539,
+        491
+      ]
+    },
+    {
+      "frame": 9,
+      "timestamp": 0.36,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 48.32,
+      "headlight_distance": 424.4,
+      "headlight_position": [
+        539,
+        491
+      ]
+    },
+    {
+      "frame": 9,
+      "timestamp": 0.36,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 128.88,
+      "headlight_distance": 395.3,
+      "headlight_position": [
+        539,
+        491
+      ]
+    },
+    {
+      "frame": 11,
+      "timestamp": 0.44,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 74.35,
+      "headlight_distance": 527.2,
+      "headlight_position": [
+        405,
+        480
+      ]
+    },
+    {
+      "frame": 11,
+      "timestamp": 0.44,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 51.41,
+      "headlight_distance": 390.0,
+      "headlight_position": [
+        405,
+        480
+      ]
+    },
+    {
+      "frame": 11,
+      "timestamp": 0.44,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 115.48,
+      "headlight_distance": 457.7,
+      "headlight_position": [
+        405,
+        480
+      ]
+    },
+    {
+      "frame": 13,
+      "timestamp": 0.52,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 27.11,
+      "headlight_distance": 677.5,
+      "headlight_position": [
+        902,
+        545
+      ]
+    },
+    {
+      "frame": 13,
+      "timestamp": 0.52,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 114.64,
+      "headlight_distance": 461.6,
+      "headlight_position": [
+        902,
+        545
+      ]
+    },
+    {
+      "frame": 15,
+      "timestamp": 0.6,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 32.41,
+      "headlight_distance": 766.8,
+      "headlight_position": [
+        926,
+        648
+      ]
+    },
+    {
+      "frame": 15,
+      "timestamp": 0.6,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 94.03,
+      "headlight_distance": 565.2,
+      "headlight_position": [
+        926,
+        648
+      ]
+    },
+    {
+      "frame": 19,
+      "timestamp": 0.76,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 94.75,
+      "headlight_distance": 445.0,
+      "headlight_position": [
+        356,
+        414
+      ]
+    },
+    {
+      "frame": 19,
+      "timestamp": 0.76,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 56.75,
+      "headlight_distance": 327.0,
+      "headlight_position": [
+        356,
+        414
+      ]
+    },
+    {
+      "frame": 19,
+      "timestamp": 0.76,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 100.21,
+      "headlight_distance": 446.1,
+      "headlight_position": [
+        356,
+        414
+      ]
+    },
+    {
+      "frame": 20,
+      "timestamp": 0.8,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 74.92,
+      "headlight_distance": 514.2,
+      "headlight_position": [
+        262,
+        538
+      ]
+    },
+    {
+      "frame": 20,
+      "timestamp": 0.8,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 44.31,
+      "headlight_distance": 468.8,
+      "headlight_position": [
+        262,
+        538
+      ]
+    },
+    {
+      "frame": 20,
+      "timestamp": 0.8,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 90.62,
+      "headlight_distance": 598.6,
+      "headlight_position": [
+        262,
+        538
+      ]
+    },
+    {
+      "frame": 26,
+      "timestamp": 1.04,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 52.31,
+      "headlight_distance": 782.6,
+      "headlight_position": [
+        702,
+        550
+      ]
+    },
+    {
+      "frame": 26,
+      "timestamp": 1.04,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 46.54,
+      "headlight_distance": 550.3,
+      "headlight_position": [
+        702,
+        550
+      ]
+    },
+    {
+      "frame": 26,
+      "timestamp": 1.04,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 138.49,
+      "headlight_distance": 420.0,
+      "headlight_position": [
+        702,
+        550
+      ]
+    },
+    {
+      "frame": 28,
+      "timestamp": 1.12,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 38.69,
+      "headlight_distance": 609.7,
+      "headlight_position": [
+        746,
+        592
+      ]
+    },
+    {
+      "frame": 28,
+      "timestamp": 1.12,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 110.62,
+      "headlight_distance": 464.3,
+      "headlight_position": [
+        746,
+        592
+      ]
+    },
+    {
+      "frame": 31,
+      "timestamp": 1.24,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 53.1,
+      "headlight_distance": 671.8,
+      "headlight_position": [
+        597,
+        502
+      ]
+    },
+    {
+      "frame": 31,
+      "timestamp": 1.24,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 45.19,
+      "headlight_distance": 456.7,
+      "headlight_position": [
+        597,
+        502
+      ]
+    },
+    {
+      "frame": 31,
+      "timestamp": 1.24,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 136.16,
+      "headlight_distance": 386.0,
+      "headlight_position": [
+        597,
+        502
+      ]
+    },
+    {
+      "frame": 35,
+      "timestamp": 1.4,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 53.24,
+      "headlight_distance": 672.5,
+      "headlight_position": [
+        430,
+        636
+      ]
+    },
+    {
+      "frame": 35,
+      "timestamp": 1.4,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 35.84,
+      "headlight_distance": 546.8,
+      "headlight_position": [
+        430,
+        636
+      ]
+    },
+    {
+      "frame": 35,
+      "timestamp": 1.4,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 92.0,
+      "headlight_distance": 573.5,
+      "headlight_position": [
+        430,
+        636
+      ]
+    },
+    {
+      "frame": 41,
+      "timestamp": 1.64,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 38.75,
+      "headlight_distance": 558.2,
+      "headlight_position": [
+        845,
+        427
+      ]
+    },
+    {
+      "frame": 41,
+      "timestamp": 1.64,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 164.71,
+      "headlight_distance": 330.5,
+      "headlight_position": [
+        845,
+        427
+      ]
+    },
+    {
+      "frame": 47,
+      "timestamp": 1.88,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 67.31,
+      "headlight_distance": 606.6,
+      "headlight_position": [
+        576,
+        426
+      ]
+    },
+    {
+      "frame": 47,
+      "timestamp": 1.88,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 58.46,
+      "headlight_distance": 379.3,
+      "headlight_position": [
+        576,
+        426
+      ]
+    },
+    {
+      "frame": 47,
+      "timestamp": 1.88,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 118.51,
+      "headlight_distance": 320.9,
+      "headlight_position": [
+        576,
+        426
+      ]
+    },
+    {
+      "frame": 48,
+      "timestamp": 1.92,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 60.6,
+      "headlight_distance": 618.3,
+      "headlight_position": [
+        433,
+        571
+      ]
+    },
+    {
+      "frame": 48,
+      "timestamp": 1.92,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 44.22,
+      "headlight_distance": 482.1,
+      "headlight_position": [
+        433,
+        571
+      ]
+    },
+    {
+      "frame": 48,
+      "timestamp": 1.92,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 95.28,
+      "headlight_distance": 515.5,
+      "headlight_position": [
+        433,
+        571
+      ]
+    },
+    {
+      "frame": 49,
+      "timestamp": 1.96,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 35.19,
+      "headlight_distance": 606.0,
+      "headlight_position": [
+        671,
+        632
+      ]
+    },
+    {
+      "frame": 49,
+      "timestamp": 1.96,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 101.47,
+      "headlight_distance": 502.8,
+      "headlight_position": [
+        671,
+        632
+      ]
+    },
+    {
+      "frame": 50,
+      "timestamp": 2.0,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 54.8,
+      "headlight_distance": 534.1,
+      "headlight_position": [
+        467,
+        438
+      ]
+    },
+    {
+      "frame": 50,
+      "timestamp": 2.0,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 64.28,
+      "headlight_distance": 354.4,
+      "headlight_position": [
+        467,
+        438
+      ]
+    },
+    {
+      "frame": 50,
+      "timestamp": 2.0,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 134.88,
+      "headlight_distance": 386.2,
+      "headlight_position": [
+        467,
+        438
+      ]
+    },
+    {
+      "frame": 51,
+      "timestamp": 2.04,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 37.66,
+      "headlight_distance": 755.9,
+      "headlight_position": [
+        935,
+        624
+      ]
+    },
+    {
+      "frame": 51,
+      "timestamp": 2.04,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 108.22,
+      "headlight_distance": 547.0,
+      "headlight_position": [
+        935,
+        624
+      ]
+    },
+    {
+      "frame": 56,
+      "timestamp": 2.24,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 72.82,
+      "headlight_distance": 550.3,
+      "headlight_position": [
+        383,
+        522
+      ]
+    },
+    {
+      "frame": 56,
+      "timestamp": 2.24,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 56.68,
+      "headlight_distance": 432.3,
+      "headlight_position": [
+        383,
+        522
+      ]
+    },
+    {
+      "frame": 56,
+      "timestamp": 2.24,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 96.35,
+      "headlight_distance": 504.1,
+      "headlight_position": [
+        383,
+        522
+      ]
+    },
+    {
+      "frame": 62,
+      "timestamp": 2.48,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 77.03,
+      "headlight_distance": 507.3,
+      "headlight_position": [
+        386,
+        469
+      ]
+    },
+    {
+      "frame": 62,
+      "timestamp": 2.48,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 62.82,
+      "headlight_distance": 379.3,
+      "headlight_position": [
+        386,
+        469
+      ]
+    },
+    {
+      "frame": 62,
+      "timestamp": 2.48,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 99.77,
+      "headlight_distance": 462.1,
+      "headlight_position": [
+        386,
+        469
+      ]
+    },
+    {
+      "frame": 66,
+      "timestamp": 2.64,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 43.36,
+      "headlight_distance": 778.4,
+      "headlight_position": [
+        688,
+        560
+      ]
+    },
+    {
+      "frame": 66,
+      "timestamp": 2.64,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 43.21,
+      "headlight_distance": 551.2,
+      "headlight_position": [
+        688,
+        560
+      ]
+    },
+    {
+      "frame": 66,
+      "timestamp": 2.64,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 90.64,
+      "headlight_distance": 430.2,
+      "headlight_position": [
+        688,
+        560
+      ]
+    },
+    {
+      "frame": 70,
+      "timestamp": 2.8,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 42.3,
+      "headlight_distance": 768.3,
+      "headlight_position": [
+        614,
+        621
+      ]
+    },
+    {
+      "frame": 70,
+      "timestamp": 2.8,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 42.85,
+      "headlight_distance": 572.5,
+      "headlight_position": [
+        614,
+        621
+      ]
+    },
+    {
+      "frame": 70,
+      "timestamp": 2.8,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 86.11,
+      "headlight_distance": 498.5,
+      "headlight_position": [
+        614,
+        621
+      ]
+    },
+    {
+      "frame": 75,
+      "timestamp": 3.0,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 65.72,
+      "headlight_distance": 557.6,
+      "headlight_position": [
+        432,
+        498
+      ]
+    },
+    {
+      "frame": 75,
+      "timestamp": 3.0,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 60.37,
+      "headlight_distance": 409.3,
+      "headlight_position": [
+        432,
+        498
+      ]
+    },
+    {
+      "frame": 75,
+      "timestamp": 3.0,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 119.11,
+      "headlight_distance": 455.2,
+      "headlight_position": [
+        432,
+        498
+      ]
+    },
+    {
+      "frame": 87,
+      "timestamp": 3.48,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 57.41,
+      "headlight_distance": 697.0,
+      "headlight_position": [
+        537,
+        593
+      ]
+    },
+    {
+      "frame": 87,
+      "timestamp": 3.48,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 49.62,
+      "headlight_distance": 521.3,
+      "headlight_position": [
+        537,
+        593
+      ]
+    },
+    {
+      "frame": 87,
+      "timestamp": 3.48,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 113.24,
+      "headlight_distance": 490.9,
+      "headlight_position": [
+        537,
+        593
+      ]
+    },
+    {
+      "frame": 88,
+      "timestamp": 3.52,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 59.91,
+      "headlight_distance": 546.8,
+      "headlight_position": [
+        476,
+        447
+      ]
+    },
+    {
+      "frame": 88,
+      "timestamp": 3.52,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 67.39,
+      "headlight_distance": 365.0,
+      "headlight_position": [
+        476,
+        447
+      ]
+    },
+    {
+      "frame": 88,
+      "timestamp": 3.52,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 150.32,
+      "headlight_distance": 388.2,
+      "headlight_position": [
+        476,
+        447
+      ]
+    },
+    {
+      "frame": 92,
+      "timestamp": 3.68,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 51.81,
+      "headlight_distance": 736.7,
+      "headlight_position": [
+        669,
+        518
+      ]
+    },
+    {
+      "frame": 92,
+      "timestamp": 3.68,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 38.41,
+      "headlight_distance": 505.5,
+      "headlight_position": [
+        669,
+        518
+      ]
+    },
+    {
+      "frame": 92,
+      "timestamp": 3.68,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 132.88,
+      "headlight_distance": 389.2,
+      "headlight_position": [
+        669,
+        518
+      ]
+    },
+    {
+      "frame": 99,
+      "timestamp": 3.96,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 42.88,
+      "headlight_distance": 554.7,
+      "headlight_position": [
+        858,
+        403
+      ]
+    },
+    {
+      "frame": 99,
+      "timestamp": 3.96,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 164.85,
+      "headlight_distance": 315.4,
+      "headlight_position": [
+        858,
+        403
+      ]
+    },
+    {
+      "frame": 100,
+      "timestamp": 4.0,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 59.63,
+      "headlight_distance": 599.0,
+      "headlight_position": [
+        419,
+        557
+      ]
+    },
+    {
+      "frame": 100,
+      "timestamp": 4.0,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 48.26,
+      "headlight_distance": 467.4,
+      "headlight_position": [
+        419,
+        557
+      ]
+    },
+    {
+      "frame": 100,
+      "timestamp": 4.0,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 108.8,
+      "headlight_distance": 511.2,
+      "headlight_position": [
+        419,
+        557
+      ]
+    },
+    {
+      "frame": 104,
+      "timestamp": 4.16,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 75.41,
+      "headlight_distance": 490.6,
+      "headlight_position": [
+        360,
+        466
+      ]
+    },
+    {
+      "frame": 104,
+      "timestamp": 4.16,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 52.88,
+      "headlight_distance": 378.1,
+      "headlight_position": [
+        360,
+        466
+      ]
+    },
+    {
+      "frame": 104,
+      "timestamp": 4.16,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 110.2,
+      "headlight_distance": 478.0,
+      "headlight_position": [
+        360,
+        466
+      ]
+    },
+    {
+      "frame": 106,
+      "timestamp": 4.24,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 57.74,
+      "headlight_distance": 651.4,
+      "headlight_position": [
+        487,
+        574
+      ]
+    },
+    {
+      "frame": 106,
+      "timestamp": 4.24,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 51.36,
+      "headlight_distance": 491.8,
+      "headlight_position": [
+        487,
+        574
+      ]
+    },
+    {
+      "frame": 106,
+      "timestamp": 4.24,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 105.69,
+      "headlight_distance": 492.4,
+      "headlight_position": [
+        487,
+        574
+      ]
+    },
+    {
+      "frame": 111,
+      "timestamp": 4.44,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 36.16,
+      "headlight_distance": 650.8,
+      "headlight_position": [
+        958,
+        425
+      ]
+    },
+    {
+      "frame": 111,
+      "timestamp": 4.44,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 135.52,
+      "headlight_distance": 391.9,
+      "headlight_position": [
+        958,
+        425
+      ]
+    },
+    {
+      "frame": 122,
+      "timestamp": 4.88,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 31.35,
+      "headlight_distance": 725.7,
+      "headlight_position": [
+        926,
+        590
+      ]
+    },
+    {
+      "frame": 122,
+      "timestamp": 4.88,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 95.63,
+      "headlight_distance": 512.5,
+      "headlight_position": [
+        926,
+        590
+      ]
+    },
+    {
+      "frame": 124,
+      "timestamp": 4.96,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 59.51,
+      "headlight_distance": 579.8,
+      "headlight_position": [
+        513,
+        457
+      ]
+    },
+    {
+      "frame": 124,
+      "timestamp": 4.96,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 65.96,
+      "headlight_distance": 384.0,
+      "headlight_position": [
+        513,
+        457
+      ]
+    },
+    {
+      "frame": 124,
+      "timestamp": 4.96,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 138.34,
+      "headlight_distance": 376.7,
+      "headlight_position": [
+        513,
+        457
+      ]
+    },
+    {
+      "frame": 126,
+      "timestamp": 5.04,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 69.67,
+      "headlight_distance": 463.8,
+      "headlight_position": [
+        204,
+        502
+      ]
+    },
+    {
+      "frame": 126,
+      "timestamp": 5.04,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 62.02,
+      "headlight_distance": 456.2,
+      "headlight_position": [
+        204,
+        502
+      ]
+    },
+    {
+      "frame": 126,
+      "timestamp": 5.04,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 98.91,
+      "headlight_distance": 620.0,
+      "headlight_position": [
+        204,
+        502
+      ]
+    },
+    {
+      "frame": 133,
+      "timestamp": 5.32,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 38.67,
+      "headlight_distance": 545.1,
+      "headlight_position": [
+        803,
+        457
+      ]
+    },
+    {
+      "frame": 133,
+      "timestamp": 5.32,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 176.12,
+      "headlight_distance": 342.8,
+      "headlight_position": [
+        803,
+        457
+      ]
+    },
+    {
+      "frame": 134,
+      "timestamp": 5.36,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 37.37,
+      "headlight_distance": 630.6,
+      "headlight_position": [
+        712,
+        638
+      ]
+    },
+    {
+      "frame": 134,
+      "timestamp": 5.36,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 85.47,
+      "headlight_distance": 508.1,
+      "headlight_position": [
+        712,
+        638
+      ]
+    },
+    {
+      "frame": 137,
+      "timestamp": 5.48,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 57.51,
+      "headlight_distance": 653.5,
+      "headlight_position": [
+        471,
+        588
+      ]
+    },
+    {
+      "frame": 137,
+      "timestamp": 5.48,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 52.9,
+      "headlight_distance": 503.0,
+      "headlight_position": [
+        471,
+        588
+      ]
+    },
+    {
+      "frame": 137,
+      "timestamp": 5.48,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 87.7,
+      "headlight_distance": 512.1,
+      "headlight_position": [
+        471,
+        588
+      ]
+    },
+    {
+      "frame": 138,
+      "timestamp": 5.52,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 40.54,
+      "headlight_distance": 667.2,
+      "headlight_position": [
+        855,
+        578
+      ]
+    },
+    {
+      "frame": 138,
+      "timestamp": 5.52,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 106.63,
+      "headlight_distance": 474.1,
+      "headlight_position": [
+        855,
+        578
+      ]
+    },
+    {
+      "frame": 139,
+      "timestamp": 5.56,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 62.7,
+      "headlight_distance": 685.8,
+      "headlight_position": [
+        631,
+        484
+      ]
+    },
+    {
+      "frame": 139,
+      "timestamp": 5.56,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 43.53,
+      "headlight_distance": 456.7,
+      "headlight_position": [
+        631,
+        484
+      ]
+    },
+    {
+      "frame": 139,
+      "timestamp": 5.56,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 142.06,
+      "headlight_distance": 360.7,
+      "headlight_position": [
+        631,
+        484
+      ]
+    },
+    {
+      "frame": 144,
+      "timestamp": 5.76,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 62.4,
+      "headlight_distance": 583.8,
+      "headlight_position": [
+        422,
+        537
+      ]
+    },
+    {
+      "frame": 144,
+      "timestamp": 5.76,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 63.02,
+      "headlight_distance": 447.5,
+      "headlight_position": [
+        422,
+        537
+      ]
+    },
+    {
+      "frame": 144,
+      "timestamp": 5.76,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 109.31,
+      "headlight_distance": 492.9,
+      "headlight_position": [
+        422,
+        537
+      ]
+    },
+    {
+      "frame": 145,
+      "timestamp": 5.8,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 35.22,
+      "headlight_distance": 707.5,
+      "headlight_position": [
+        991,
+        479
+      ]
+    },
+    {
+      "frame": 145,
+      "timestamp": 5.8,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 111.64,
+      "headlight_distance": 454.4,
+      "headlight_position": [
+        991,
+        479
+      ]
+    },
+    {
+      "frame": 157,
+      "timestamp": 6.28,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 59.4,
+      "headlight_distance": 613.5,
+      "headlight_position": [
+        596,
+        411
+      ]
+    },
+    {
+      "frame": 157,
+      "timestamp": 6.28,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 62.43,
+      "headlight_distance": 376.1,
+      "headlight_position": [
+        596,
+        411
+      ]
+    },
+    {
+      "frame": 157,
+      "timestamp": 6.28,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 162.05,
+      "headlight_distance": 299.6,
+      "headlight_position": [
+        596,
+        411
+      ]
+    },
+    {
+      "frame": 158,
+      "timestamp": 6.32,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 30.64,
+      "headlight_distance": 701.6,
+      "headlight_position": [
+        975,
+        492
+      ]
+    },
+    {
+      "frame": 158,
+      "timestamp": 6.32,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 123.58,
+      "headlight_distance": 454.6,
+      "headlight_position": [
+        975,
+        492
+      ]
+    },
+    {
+      "frame": 159,
+      "timestamp": 6.36,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 52.09,
+      "headlight_distance": 757.9,
+      "headlight_position": [
+        700,
+        513
+      ]
+    },
+    {
+      "frame": 159,
+      "timestamp": 6.36,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 45.4,
+      "headlight_distance": 518.6,
+      "headlight_position": [
+        700,
+        513
+      ]
+    },
+    {
+      "frame": 159,
+      "timestamp": 6.36,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 146.18,
+      "headlight_distance": 383.0,
+      "headlight_position": [
+        700,
+        513
+      ]
+    },
+    {
+      "frame": 160,
+      "timestamp": 6.4,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 57.68,
+      "headlight_distance": 667.5,
+      "headlight_position": [
+        593,
+        500
+      ]
+    },
+    {
+      "frame": 160,
+      "timestamp": 6.4,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 54.17,
+      "headlight_distance": 453.2,
+      "headlight_position": [
+        593,
+        500
+      ]
+    },
+    {
+      "frame": 160,
+      "timestamp": 6.4,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 142.64,
+      "headlight_distance": 385.2,
+      "headlight_position": [
+        593,
+        500
+      ]
+    },
+    {
+      "frame": 171,
+      "timestamp": 6.84,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 69.03,
+      "headlight_distance": 593.2,
+      "headlight_position": [
+        472,
+        512
+      ]
+    },
+    {
+      "frame": 171,
+      "timestamp": 6.84,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 53.47,
+      "headlight_distance": 428.1,
+      "headlight_position": [
+        472,
+        512
+      ]
+    },
+    {
+      "frame": 171,
+      "timestamp": 6.84,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 124.33,
+      "headlight_distance": 444.9,
+      "headlight_position": [
+        472,
+        512
+      ]
+    },
+    {
+      "frame": 173,
+      "timestamp": 6.92,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 58.8,
+      "headlight_distance": 596.9,
+      "headlight_position": [
+        432,
+        546
+      ]
+    },
+    {
+      "frame": 173,
+      "timestamp": 6.92,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 48.61,
+      "headlight_distance": 457.1,
+      "headlight_position": [
+        432,
+        546
+      ]
+    },
+    {
+      "frame": 173,
+      "timestamp": 6.92,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 98.22,
+      "headlight_distance": 494.9,
+      "headlight_position": [
+        432,
+        546
+      ]
+    },
+    {
+      "frame": 179,
+      "timestamp": 7.16,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 74.38,
+      "headlight_distance": 543.3,
+      "headlight_position": [
+        224,
+        579
+      ]
+    },
+    {
+      "frame": 179,
+      "timestamp": 7.16,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 47.43,
+      "headlight_distance": 519.7,
+      "headlight_position": [
+        224,
+        579
+      ]
+    },
+    {
+      "frame": 179,
+      "timestamp": 7.16,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 84.07,
+      "headlight_distance": 654.4,
+      "headlight_position": [
+        224,
+        579
+      ]
+    },
+    {
+      "frame": 180,
+      "timestamp": 7.2,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 69.57,
+      "headlight_distance": 553.3,
+      "headlight_position": [
+        241,
+        585
+      ]
+    },
+    {
+      "frame": 180,
+      "timestamp": 7.2,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 44.26,
+      "headlight_distance": 519.9,
+      "headlight_position": [
+        241,
+        585
+      ]
+    },
+    {
+      "frame": 180,
+      "timestamp": 7.2,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 74.69,
+      "headlight_distance": 646.3,
+      "headlight_position": [
+        241,
+        585
+      ]
+    },
+    {
+      "frame": 184,
+      "timestamp": 7.36,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 49.62,
+      "headlight_distance": 774.7,
+      "headlight_position": [
+        787,
+        408
+      ]
+    },
+    {
+      "frame": 184,
+      "timestamp": 7.36,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 51.79,
+      "headlight_distance": 500.9,
+      "headlight_position": [
+        787,
+        408
+      ]
+    },
+    {
+      "frame": 184,
+      "timestamp": 7.36,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 170.05,
+      "headlight_distance": 291.3,
+      "headlight_position": [
+        787,
+        408
+      ]
+    },
+    {
+      "frame": 187,
+      "timestamp": 7.48,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 63.86,
+      "headlight_distance": 578.7,
+      "headlight_position": [
+        364,
+        565
+      ]
+    },
+    {
+      "frame": 187,
+      "timestamp": 7.48,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 53.48,
+      "headlight_distance": 476.4,
+      "headlight_position": [
+        364,
+        565
+      ]
+    },
+    {
+      "frame": 187,
+      "timestamp": 7.48,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 89.71,
+      "headlight_distance": 549.7,
+      "headlight_position": [
+        364,
+        565
+      ]
+    },
+    {
+      "frame": 192,
+      "timestamp": 7.68,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 40.59,
+      "headlight_distance": 710.5,
+      "headlight_position": [
+        644,
+        507
+      ]
+    },
+    {
+      "frame": 192,
+      "timestamp": 7.68,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 54.7,
+      "headlight_distance": 483.1,
+      "headlight_position": [
+        644,
+        507
+      ]
+    },
+    {
+      "frame": 192,
+      "timestamp": 7.68,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 131.75,
+      "headlight_distance": 381.1,
+      "headlight_position": [
+        644,
+        507
+      ]
+    },
+    {
+      "frame": 194,
+      "timestamp": 7.76,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 45.54,
+      "headlight_distance": 795.0,
+      "headlight_position": [
+        675,
+        599
+      ]
+    },
+    {
+      "frame": 194,
+      "timestamp": 7.76,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 40.75,
+      "headlight_distance": 578.5,
+      "headlight_position": [
+        675,
+        599
+      ]
+    },
+    {
+      "frame": 194,
+      "timestamp": 7.76,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 101.13,
+      "headlight_distance": 469.7,
+      "headlight_position": [
+        675,
+        599
+      ]
+    },
+    {
+      "frame": 199,
+      "timestamp": 7.96,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 55.47,
+      "headlight_distance": 529.1,
+      "headlight_position": [
+        316,
+        533
+      ]
+    },
+    {
+      "frame": 199,
+      "timestamp": 7.96,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 53.69,
+      "headlight_distance": 450.9,
+      "headlight_position": [
+        316,
+        533
+      ]
+    },
+    {
+      "frame": 199,
+      "timestamp": 7.96,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 91.46,
+      "headlight_distance": 556.7,
+      "headlight_position": [
+        316,
+        533
+      ]
+    },
+    {
+      "frame": 201,
+      "timestamp": 8.04,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 62.08,
+      "headlight_distance": 600.0,
+      "headlight_position": [
+        246,
+        632
+      ]
+    },
+    {
+      "frame": 201,
+      "timestamp": 8.04,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 37.69,
+      "headlight_distance": 563.5,
+      "headlight_position": [
+        246,
+        632
+      ]
+    },
+    {
+      "frame": 201,
+      "timestamp": 8.04,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 69.1,
+      "headlight_distance": 676.8,
+      "headlight_position": [
+        246,
+        632
+      ]
+    },
+    {
+      "frame": 208,
+      "timestamp": 8.32,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 48.93,
+      "headlight_distance": 717.4,
+      "headlight_position": [
+        557,
+        603
+      ]
+    },
+    {
+      "frame": 208,
+      "timestamp": 8.32,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 39.43,
+      "headlight_distance": 536.5,
+      "headlight_position": [
+        557,
+        603
+      ]
+    },
+    {
+      "frame": 208,
+      "timestamp": 8.32,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 109.64,
+      "headlight_distance": 494.1,
+      "headlight_position": [
+        557,
+        603
+      ]
+    },
+    {
+      "frame": 210,
+      "timestamp": 8.4,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 32.57,
+      "headlight_distance": 628.3,
+      "headlight_position": [
+        739,
+        619
+      ]
+    },
+    {
+      "frame": 210,
+      "timestamp": 8.4,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 91.56,
+      "headlight_distance": 490.6,
+      "headlight_position": [
+        739,
+        619
+      ]
+    },
+    {
+      "frame": 212,
+      "timestamp": 8.48,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 56.49,
+      "headlight_distance": 591.7,
+      "headlight_position": [
+        400,
+        560
+      ]
+    },
+    {
+      "frame": 212,
+      "timestamp": 8.48,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 56.99,
+      "headlight_distance": 470.0,
+      "headlight_position": [
+        400,
+        560
+      ]
+    },
+    {
+      "frame": 212,
+      "timestamp": 8.48,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 84.02,
+      "headlight_distance": 524.3,
+      "headlight_position": [
+        400,
+        560
+      ]
+    },
+    {
+      "frame": 213,
+      "timestamp": 8.52,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 51.12,
+      "headlight_distance": 761.0,
+      "headlight_position": [
+        757,
+        434
+      ]
+    },
+    {
+      "frame": 213,
+      "timestamp": 8.52,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 52.87,
+      "headlight_distance": 495.8,
+      "headlight_position": [
+        757,
+        434
+      ]
+    },
+    {
+      "frame": 213,
+      "timestamp": 8.52,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 179.13,
+      "headlight_distance": 309.3,
+      "headlight_position": [
+        757,
+        434
+      ]
+    },
+    {
+      "frame": 215,
+      "timestamp": 8.6,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 56.23,
+      "headlight_distance": 635.6,
+      "headlight_position": [
+        318,
+        647
+      ]
+    },
+    {
+      "frame": 215,
+      "timestamp": 8.6,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 45.35,
+      "headlight_distance": 563.0,
+      "headlight_position": [
+        318,
+        647
+      ]
+    },
+    {
+      "frame": 215,
+      "timestamp": 8.6,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 76.77,
+      "headlight_distance": 642.8,
+      "headlight_position": [
+        318,
+        647
+      ]
+    },
+    {
+      "frame": 217,
+      "timestamp": 8.68,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 71.99,
+      "headlight_distance": 561.2,
+      "headlight_position": [
+        481,
+        462
+      ]
+    },
+    {
+      "frame": 217,
+      "timestamp": 8.68,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 57.74,
+      "headlight_distance": 380.7,
+      "headlight_position": [
+        481,
+        462
+      ]
+    },
+    {
+      "frame": 217,
+      "timestamp": 8.68,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 121.15,
+      "headlight_distance": 397.7,
+      "headlight_position": [
+        481,
+        462
+      ]
+    },
+    {
+      "frame": 218,
+      "timestamp": 8.72,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 47.25,
+      "headlight_distance": 775.0,
+      "headlight_position": [
+        710,
+        528
+      ]
+    },
+    {
+      "frame": 218,
+      "timestamp": 8.72,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 44.02,
+      "headlight_distance": 536.6,
+      "headlight_position": [
+        710,
+        528
+      ]
+    },
+    {
+      "frame": 218,
+      "timestamp": 8.72,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 154.92,
+      "headlight_distance": 398.1,
+      "headlight_position": [
+        710,
+        528
+      ]
+    },
+    {
+      "frame": 225,
+      "timestamp": 9.0,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 45.97,
+      "headlight_distance": 721.0,
+      "headlight_position": [
+        656,
+        509
+      ]
+    },
+    {
+      "frame": 225,
+      "timestamp": 9.0,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 42.16,
+      "headlight_distance": 491.0,
+      "headlight_position": [
+        656,
+        509
+      ]
+    },
+    {
+      "frame": 225,
+      "timestamp": 9.0,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 140.23,
+      "headlight_distance": 381.5,
+      "headlight_position": [
+        656,
+        509
+      ]
+    },
+    {
+      "frame": 227,
+      "timestamp": 9.08,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 76.12,
+      "headlight_distance": 463.5,
+      "headlight_position": [
+        294,
+        471
+      ]
+    },
+    {
+      "frame": 227,
+      "timestamp": 9.08,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 57.75,
+      "headlight_distance": 395.5,
+      "headlight_position": [
+        294,
+        471
+      ]
+    },
+    {
+      "frame": 227,
+      "timestamp": 9.08,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 93.5,
+      "headlight_distance": 530.2,
+      "headlight_position": [
+        294,
+        471
+      ]
+    },
+    {
+      "frame": 233,
+      "timestamp": 9.32,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 32.14,
+      "headlight_distance": 670.7,
+      "headlight_position": [
+        962,
+        456
+      ]
+    },
+    {
+      "frame": 233,
+      "timestamp": 9.32,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 155.24,
+      "headlight_distance": 418.2,
+      "headlight_position": [
+        962,
+        456
+      ]
+    },
+    {
+      "frame": 244,
+      "timestamp": 9.76,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 57.59,
+      "headlight_distance": 723.4,
+      "headlight_position": [
+        507,
+        648
+      ]
+    },
+    {
+      "frame": 244,
+      "timestamp": 9.76,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 40.5,
+      "headlight_distance": 568.2,
+      "headlight_position": [
+        507,
+        648
+      ]
+    },
+    {
+      "frame": 244,
+      "timestamp": 9.76,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 108.93,
+      "headlight_distance": 552.8,
+      "headlight_position": [
+        507,
+        648
+      ]
+    },
+    {
+      "frame": 247,
+      "timestamp": 9.88,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 54.84,
+      "headlight_distance": 569.3,
+      "headlight_position": [
+        383,
+        544
+      ]
+    },
+    {
+      "frame": 247,
+      "timestamp": 9.88,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 41.71,
+      "headlight_distance": 454.3,
+      "headlight_position": [
+        383,
+        544
+      ]
+    },
+    {
+      "frame": 247,
+      "timestamp": 9.88,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 98.75,
+      "headlight_distance": 521.4,
+      "headlight_position": [
+        383,
+        544
+      ]
+    },
+    {
+      "frame": 253,
+      "timestamp": 10.12,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 70.53,
+      "headlight_distance": 633.8,
+      "headlight_position": [
+        310,
+        648
+      ]
+    },
+    {
+      "frame": 253,
+      "timestamp": 10.12,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 35.96,
+      "headlight_distance": 565.2,
+      "headlight_position": [
+        310,
+        648
+      ]
+    },
+    {
+      "frame": 253,
+      "timestamp": 10.12,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 92.73,
+      "headlight_distance": 648.4,
+      "headlight_position": [
+        310,
+        648
+      ]
+    },
+    {
+      "frame": 254,
+      "timestamp": 10.16,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 35.14,
+      "headlight_distance": 597.1,
+      "headlight_position": [
+        895,
+        424
+      ]
+    },
+    {
+      "frame": 254,
+      "timestamp": 10.16,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 145.85,
+      "headlight_distance": 352.8,
+      "headlight_position": [
+        895,
+        424
+      ]
+    },
+    {
+      "frame": 256,
+      "timestamp": 10.24,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 44.44,
+      "headlight_distance": 563.1,
+      "headlight_position": [
+        833,
+        450
+      ]
+    },
+    {
+      "frame": 256,
+      "timestamp": 10.24,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 137.23,
+      "headlight_distance": 346.5,
+      "headlight_position": [
+        833,
+        450
+      ]
+    },
+    {
+      "frame": 257,
+      "timestamp": 10.28,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 43.89,
+      "headlight_distance": 779.0,
+      "headlight_position": [
+        712,
+        532
+      ]
+    },
+    {
+      "frame": 257,
+      "timestamp": 10.28,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 36.16,
+      "headlight_distance": 541.0,
+      "headlight_position": [
+        712,
+        532
+      ]
+    },
+    {
+      "frame": 257,
+      "timestamp": 10.28,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 126.28,
+      "headlight_distance": 402.2,
+      "headlight_position": [
+        712,
+        532
+      ]
+    },
+    {
+      "frame": 261,
+      "timestamp": 10.44,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 63.89,
+      "headlight_distance": 527.2,
+      "headlight_position": [
+        448,
+        446
+      ]
+    },
+    {
+      "frame": 261,
+      "timestamp": 10.44,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 64.94,
+      "headlight_distance": 359.2,
+      "headlight_position": [
+        448,
+        446
+      ]
+    },
+    {
+      "frame": 261,
+      "timestamp": 10.44,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 126.67,
+      "headlight_distance": 404.2,
+      "headlight_position": [
+        448,
+        446
+      ]
+    },
+    {
+      "frame": 264,
+      "timestamp": 10.56,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 35.54,
+      "headlight_distance": 628.5,
+      "headlight_position": [
+        918,
+        446
+      ]
+    },
+    {
+      "frame": 264,
+      "timestamp": 10.56,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 131.17,
+      "headlight_distance": 383.9,
+      "headlight_position": [
+        918,
+        446
+      ]
+    },
+    {
+      "frame": 269,
+      "timestamp": 10.76,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 44.98,
+      "headlight_distance": 619.9,
+      "headlight_position": [
+        511,
+        514
+      ]
+    },
+    {
+      "frame": 269,
+      "timestamp": 10.76,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 55.12,
+      "headlight_distance": 438.3,
+      "headlight_position": [
+        511,
+        514
+      ]
+    },
+    {
+      "frame": 269,
+      "timestamp": 10.76,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 124.75,
+      "headlight_distance": 428.0,
+      "headlight_position": [
+        511,
+        514
+      ]
+    },
+    {
+      "frame": 272,
+      "timestamp": 10.88,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 42.33,
+      "headlight_distance": 718.2,
+      "headlight_position": [
+        705,
+        437
+      ]
+    },
+    {
+      "frame": 272,
+      "timestamp": 10.88,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 50.45,
+      "headlight_distance": 462.0,
+      "headlight_position": [
+        705,
+        437
+      ]
+    },
+    {
+      "frame": 272,
+      "timestamp": 10.88,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 155.89,
+      "headlight_distance": 307.0,
+      "headlight_position": [
+        705,
+        437
+      ]
+    },
+    {
+      "frame": 273,
+      "timestamp": 10.92,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 45.09,
+      "headlight_distance": 689.0,
+      "headlight_position": [
+        472,
+        630
+      ]
+    },
+    {
+      "frame": 273,
+      "timestamp": 10.92,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 42.24,
+      "headlight_distance": 544.8,
+      "headlight_position": [
+        472,
+        630
+      ]
+    },
+    {
+      "frame": 273,
+      "timestamp": 10.92,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 85.98,
+      "headlight_distance": 549.5,
+      "headlight_position": [
+        472,
+        630
+      ]
+    },
+    {
+      "frame": 274,
+      "timestamp": 10.96,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 29.12,
+      "headlight_distance": 613.5,
+      "headlight_position": [
+        724,
+        611
+      ]
+    },
+    {
+      "frame": 274,
+      "timestamp": 10.96,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 103.31,
+      "headlight_distance": 481.6,
+      "headlight_position": [
+        724,
+        611
+      ]
+    },
+    {
+      "frame": 286,
+      "timestamp": 11.44,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 61.58,
+      "headlight_distance": 617.4,
+      "headlight_position": [
+        514,
+        508
+      ]
+    },
+    {
+      "frame": 286,
+      "timestamp": 11.44,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 51.69,
+      "headlight_distance": 433.3,
+      "headlight_position": [
+        514,
+        508
+      ]
+    },
+    {
+      "frame": 286,
+      "timestamp": 11.44,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 120.37,
+      "headlight_distance": 421.3,
+      "headlight_position": [
+        514,
+        508
+      ]
+    },
+    {
+      "frame": 288,
+      "timestamp": 11.52,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 44.29,
+      "headlight_distance": 631.5,
+      "headlight_position": [
+        549,
+        494
+      ]
+    },
+    {
+      "frame": 288,
+      "timestamp": 11.52,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 53.97,
+      "headlight_distance": 430.6,
+      "headlight_position": [
+        549,
+        494
+      ]
+    },
+    {
+      "frame": 288,
+      "timestamp": 11.52,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 143.32,
+      "headlight_distance": 394.1,
+      "headlight_position": [
+        549,
+        494
+      ]
+    },
+    {
+      "frame": 290,
+      "timestamp": 11.6,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 83.69,
+      "headlight_distance": 510.4,
+      "headlight_position": [
+        317,
+        512
+      ]
+    },
+    {
+      "frame": 290,
+      "timestamp": 11.6,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 52.71,
+      "headlight_distance": 430.1,
+      "headlight_position": [
+        317,
+        512
+      ]
+    },
+    {
+      "frame": 290,
+      "timestamp": 11.6,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 101.14,
+      "headlight_distance": 540.9,
+      "headlight_position": [
+        317,
+        512
+      ]
+    },
+    {
+      "frame": 294,
+      "timestamp": 11.76,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 56.79,
+      "headlight_distance": 690.8,
+      "headlight_position": [
+        609,
+        517
+      ]
+    },
+    {
+      "frame": 294,
+      "timestamp": 11.76,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 43.67,
+      "headlight_distance": 475.4,
+      "headlight_position": [
+        609,
+        517
+      ]
+    },
+    {
+      "frame": 294,
+      "timestamp": 11.76,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 138.56,
+      "headlight_distance": 397.6,
+      "headlight_position": [
+        609,
+        517
+      ]
+    },
+    {
+      "frame": 299,
+      "timestamp": 11.96,
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        100,
+        50,
+        80,
+        60
+      ],
+      "brightness": 77.56,
+      "headlight_distance": 508.2,
+      "headlight_position": [
+        338,
+        499
+      ]
+    },
+    {
+      "frame": 299,
+      "timestamp": 11.96,
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "sign_roi": [
+        400,
+        90,
+        80,
+        60
+      ],
+      "brightness": 45.91,
+      "headlight_distance": 413.7,
+      "headlight_position": [
+        338,
+        499
+      ]
+    },
+    {
+      "frame": 299,
+      "timestamp": 11.96,
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "sign_roi": [
+        700,
+        130,
+        80,
+        60
+      ],
+      "brightness": 92.68,
+      "headlight_distance": 516.9,
+      "headlight_position": [
+        338,
+        499
+      ]
+    }
+  ],
+  "sign_summaries": [
+    {
+      "sign_id": "SIGN-001",
+      "sign_type": "Regulatory Sign",
+      "true_rl": 181.09,
+      "n_measurements": 63,
+      "median_brightness": 57.74,
+      "std_brightness": 11.3,
+      "estimated_rl": 144.35,
+      "confidence_interval": [
+        88.97,
+        199.73
+      ],
+      "irc_minimum": 250.0,
+      "status": "warning",
+      "recommendation": "Schedule replacement within 90 days. RL is below IRC minimum but still partially effective."
+    },
+    {
+      "sign_id": "SIGN-002",
+      "sign_type": "Regulatory Sign",
+      "true_rl": 114.2,
+      "n_measurements": 84,
+      "median_brightness": 45.27,
+      "std_brightness": 9.57,
+      "estimated_rl": 113.17,
+      "confidence_interval": [
+        66.29,
+        160.06
+      ],
+      "irc_minimum": 250.0,
+      "status": "critical",
+      "recommendation": "Immediate replacement required. Retroreflectivity is severely degraded \u2014 safety hazard."
+    },
+    {
+      "sign_id": "SIGN-003",
+      "sign_type": "Warning Sign",
+      "true_rl": 258.9,
+      "n_measurements": 84,
+      "median_brightness": 111.13,
+      "std_brightness": 26.41,
+      "estimated_rl": 277.83,
+      "confidence_interval": [
+        148.42,
+        407.25
+      ],
+      "irc_minimum": 250.0,
+      "status": "compliant",
+      "recommendation": "No action required. Next scheduled inspection."
+    }
+  ]
+}

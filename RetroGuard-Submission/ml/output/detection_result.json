@@ -1,0 +1,62 @@
+[
+  {
+    "bbox": [
+      192,
+      72,
+      102,
+      86
+    ],
+    "class_name": "Regulatory Sign",
+    "confidence": 0.954
+  },
+  {
+    "bbox": [
+      960,
+      57,
+      89,
+      72
+    ],
+    "class_name": "Warning Sign",
+    "confidence": 0.843
+  },
+  {
+    "bbox": [
+      640,
+      36,
+      230,
+      57
+    ],
+    "class_name": "Guide Sign",
+    "confidence": 0.848
+  },
+  {
+    "bbox": [
+      384,
+      612,
+      153,
+      21
+    ],
+    "class_name": "Pavement Marking",
+    "confidence": 0.882
+  },
+  {
+    "bbox": [
+      768,
+      633,
+      38,
+      21
+    ],
+    "class_name": "Raised Pavement Marker",
+    "confidence": 0.844
+  },
+  {
+    "bbox": [
+      1152,
+      216,
+      38,
+      108
+    ],
+    "class_name": "Delineator",
+    "confidence": 0.878
+  }
+]
