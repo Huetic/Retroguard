@@ -47,7 +47,7 @@
 }
 
 /* ------------------------------------------------------------
-   Base
+   Base  —  supports light + dark via html[data-theme=dark]
    ------------------------------------------------------------ */
 html, body {
   min-height: 100%;
@@ -67,6 +67,103 @@ html, body {
   font-feature-settings: "ss01", "cv11";
   letter-spacing: -0.005em;
   transition: background 500ms ease, color 300ms ease;
+}
+
+/* ------------------------------------------------------------
+   Dark-mode overrides  —  html[data-theme="dark"]
+   Tailwind v4 resolves @theme tokens at build time, so we
+   override specific class/element styles directly here.
+   ------------------------------------------------------------ */
+
+/* Body gradient */
+html[data-theme="dark"] body {
+  background: radial-gradient(
+    130% 110% at 100% 0%,
+    #4A1E0B 0%,
+    #351A0E 22%,
+    #22160F 46%,
+    #18120D 72%,
+    #0F0C09 100%
+  );
+  background-attachment: fixed;
+  color: #F3EEE4;
+}
+
+/* Cards — dark surface with light text */
+html[data-theme="dark"] .card {
+  background: #24221D;
+  color: #F3EEE4;
+  border-color: rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.02),
+    0 10px 24px -10px rgba(0, 0, 0, 0.35);
+}
+
+/* Glass surfaces — invert from cream to dark */
+html[data-theme="dark"] .glass {
+  background: rgba(36, 34, 29, 0.68);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 14px 40px -12px rgba(0, 0, 0, 0.45),
+    0 2px 6px -2px rgba(0, 0, 0, 0.3);
+}
+html[data-theme="dark"] .glass-chip {
+  background: rgba(36, 34, 29, 0.82);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 6px 14px -8px rgba(0, 0, 0, 0.45);
+}
+html[data-theme="dark"] .glass-bg {
+  background: rgba(36, 34, 29, 0.35);
+  border-color: rgba(255, 255, 255, 0.05);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 10px 28px -14px rgba(0, 0, 0, 0.35);
+}
+
+/* bg-paper / bg-cream fallbacks (Tailwind utility override) */
+html[data-theme="dark"] .bg-paper { background-color: #24221D !important; }
+html[data-theme="dark"] .bg-paper-2 { background-color: #2A2722 !important; }
+html[data-theme="dark"] .bg-cream { background-color: #1F1D1A !important; }
+html[data-theme="dark"] .bg-cream-2 { background-color: #26231F !important; }
+html[data-theme="dark"] .bg-cream-3 { background-color: #2E2A25 !important; }
+
+/* Text color for any text-ink utilities (flip to light) */
+html[data-theme="dark"] .text-ink { color: #F3EEE4 !important; }
+
+/* Inputs — dark surface with light text */
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea {
+  color: #F3EEE4;
+}
+html[data-theme="dark"] input::placeholder {
+  color: rgba(243, 238, 228, 0.4);
+}
+
+/* Borders using ink/[0.05] etc. — lighten for dark mode */
+html[data-theme="dark"] .border-ink\/\[0\.04\],
+html[data-theme="dark"] .border-ink\/\[0\.045\],
+html[data-theme="dark"] .border-ink\/\[0\.05\],
+html[data-theme="dark"] .border-ink\/\[0\.06\],
+html[data-theme="dark"] .border-ink\/5,
+html[data-theme="dark"] .border-ink\/\[0\.07\] {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Hover states — slightly lift instead of darken */
+html[data-theme="dark"] .hover\:bg-cream:hover { background-color: #2E2A25 !important; }
+html[data-theme="dark"] .hover\:bg-paper:hover { background-color: #2A2722 !important; }
+html[data-theme="dark"] .hover\:bg-ink\/\[0\.03\]:hover,
+html[data-theme="dark"] .hover\:bg-ink\/\[0\.04\]:hover,
+html[data-theme="dark"] .hover\:bg-ink\/\[0\.05\]:hover {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+html[data-theme="dark"] .hover\:bg-cream\/40:hover,
+html[data-theme="dark"] .hover\:bg-cream\/50:hover {
+  background-color: rgba(255, 255, 255, 0.04) !important;
 }
 
 ::selection { background: var(--color-orange); color: #fff; }

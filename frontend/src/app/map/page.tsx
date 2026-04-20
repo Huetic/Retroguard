@@ -576,13 +576,7 @@ export default function MapPage() {
         <span className="h-px w-full bg-ink/10 my-0.5" />
 
         {/* Add asset pill */}
-        <a
-          href={
-            activeHighway === "all"
-              ? "/assets?add=1"
-              : `/assets?add=1&highway=${encodeURIComponent(activeHighway)}`
-          }
-          title="Open the asset registry with the Add asset form ready"
+        <button
           className="h-10 pl-3.5 pr-4 rounded-[12px] text-white font-medium text-[12.5px] flex items-center gap-2 shadow-[0_10px_22px_-10px_rgba(255,107,53,0.75)] hover:brightness-110 transition"
           style={{ background: "linear-gradient(135deg, #FF8B5A, #E85A26)" }}
         >
@@ -593,7 +587,7 @@ export default function MapPage() {
             {activeHighway === "all" ? "any corridor" : activeHighway}
           </span>
           <ArrowUpRight className="w-3 h-3 text-white/80" />
-        </a>
+        </button>
       </div>
     </div>
   );

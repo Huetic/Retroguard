@@ -63,7 +63,7 @@
 \fancyhf{}
 \fancyhead[L]{6th NHAI Innovation Hackathon 2026}
 \fancyhead[R]{\thepage}
-\fancyfoot[C]{Madhav Dogra \& Aaditya Gaur | RetroGuard: AI-Powered Retroreflectivity Assessment}
+\fancyfoot[C]{Madhav Dogra | RetroGuard: AI-Powered Retroreflectivity Assessment}
 \renewcommand{\headrulewidth}{0.4pt}
 \renewcommand{\footrulewidth}{0.4pt}
 
@@ -107,9 +107,9 @@
 }
 
 \author{
-    \textbf{Madhav Dogra} \quad \textbf{Aaditya Gaur}\\
+    \textbf{Madhav Dogra}\\
     6th NHAI Innovation Hackathon 2026\\
-    \texttt{madhavdogra@gmail.com} \quad \texttt{aaditya2605@gmail.com}
+    \texttt{madhavdogra@gmail.com}
 }
 
 \date{April 2026}
@@ -962,8 +962,91 @@ where $w_1, w_2, w_3$ are configurable weights balancing retroreflectivity defic
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{dashboard.jpg}
-\caption{RetroGuard Digital Twin Dashboard showing the operations overview: hero KPIs (total assets, alerts cleared, average $R_L$), live signal aggregating daily reads, calendar of upcoming compliance reviews and crew dispatches, and the weekly-workload heatmap across corridors. Sidebar navigation exposes the corridor map, asset registry, alerts queue, field capture, forecast, and compliance report.}
+\begin{tikzpicture}[scale=0.85, transform shape]
+    % Dashboard background
+    \fill[white, rounded corners=5pt] (0,0) rectangle (14, 8.5);
+
+    % Main dashboard frame
+    \draw[thick, nhaiblue, rounded corners=5pt] (0,0) rectangle (14, 8.5);
+
+    % Title bar (clipped to match rounded frame)
+    \begin{scope}
+        \clip[rounded corners=5pt] (0,0) rectangle (14, 8.5);
+        \fill[nhaiblue] (0, 7.5) rectangle (14, 8.6);
+    \end{scope}
+    \node[white, font=\bfseries] at (7, 8.0) {RetroGuard -- Highway Digital Twin Dashboard};
+
+    % ==== GIS Map Panel ====
+    \fill[gray!5, rounded corners=3pt] (0.3, 2.5) rectangle (8.2, 7.3);
+    \draw[gray!70, rounded corners=3pt] (0.3, 2.5) rectangle (8.2, 7.3);
+    \node[font=\small\bfseries, gray!80] at (4.25, 7.0) {GIS Map View -- NH-48};
+
+    % Highway line (drawn before dots so dots sit on top)
+    \draw[gray!30, line width=2.5pt] (1.0, 4.5) .. controls (3, 5.5) and (5.5, 4.2) .. (7.8, 5.3);
+
+    % Map dots along highway
+    \fill[successgreen] (1.5, 4.65) circle (0.12);
+    \fill[successgreen] (2.2, 5.05) circle (0.12);
+    \fill[successgreen] (2.9, 5.25) circle (0.12);
+    \fill[warningorange] (3.6, 5.15) circle (0.15);
+    \fill[criticalred] (4.3, 4.65) circle (0.18);
+    \fill[warningorange] (5.0, 4.35) circle (0.15);
+    \fill[successgreen] (5.7, 4.5) circle (0.12);
+    \fill[successgreen] (6.5, 5.0) circle (0.12);
+    \fill[criticalred] (7.3, 5.2) circle (0.18);
+
+    % Legend
+    \fill[successgreen] (0.8, 3.4) circle (0.1);
+    \node[right, font=\scriptsize] at (1.0, 3.4) {Compliant ($R_L >$ IRC min)};
+    \fill[warningorange] (0.8, 3.05) circle (0.1);
+    \node[right, font=\scriptsize] at (1.0, 3.05) {Warning (within 20\%)};
+    \fill[criticalred] (0.8, 2.7) circle (0.1);
+    \node[right, font=\scriptsize] at (1.0, 2.7) {Critical (below IRC min)};
+
+    % ==== Network Health Summary Panel ====
+    \draw[gray!70, rounded corners=3pt] (8.5, 5.1) rectangle (13.7, 7.3);
+    \node[font=\small\bfseries, gray!80] at (11.1, 7.0) {Network Health Summary};
+    \node[font=\scriptsize, anchor=west] at (8.8, 6.6) {Total Assets Monitored: \textbf{12,847}};
+    \node[font=\scriptsize, successgreen, anchor=west] at (8.8, 6.25) {Compliant: \textbf{9,421 (73.3\%)}};
+    \node[font=\scriptsize, warningorange, anchor=west] at (8.8, 5.9) {Warning: \textbf{2,156 (16.8\%)}};
+    \node[font=\scriptsize, criticalred, anchor=west] at (8.8, 5.55) {Critical: \textbf{1,270 (9.9\%)}};
+    \node[font=\tiny, gray, anchor=west] at (8.8, 5.25) {847 predicted to fail within 90 days};
+
+    % ==== Predictive Alerts Panel ====
+    \draw[gray!70, rounded corners=3pt] (8.5, 2.5) rectangle (13.7, 4.9);
+    \node[font=\small\bfseries, gray!80] at (11.1, 4.6) {Predictive Alerts};
+    \fill[criticalred] (8.7, 4.25) circle (0.06);
+    \node[font=\tiny, criticalred, anchor=west] at (8.85, 4.25) {NH-48 km 234: Sign $R_A = 42$ (min: 50)};
+    \fill[warningorange] (8.7, 3.9) circle (0.06);
+    \node[font=\tiny, warningorange, anchor=west] at (8.85, 3.9) {NH-48 km 289: Marking $R_L$ drop 15\%/mo};
+    \fill[warningorange] (8.7, 3.55) circle (0.06);
+    \node[font=\tiny, warningorange, anchor=west] at (8.85, 3.55) {NH-44 km 102: RPM failure predicted 45d};
+    \fill[successgreen] (8.7, 3.2) circle (0.06);
+    \node[font=\tiny, successgreen, anchor=west] at (8.85, 3.2) {NH-48 km 156: Replacement verified OK};
+
+    % ==== Degradation Trend Panel ====
+    \draw[gray!70, rounded corners=3pt] (0.3, 0.3) rectangle (6.8, 2.3);
+    \node[font=\small\bfseries, gray!80] at (3.55, 2.05) {Degradation Trend (Selected Asset)};
+    % Measured data (solid)
+    \draw[thick, nhaiblue] (0.8, 1.7) -- (2.0, 1.5) -- (3.5, 1.2) -- (4.8, 1.0);
+    % Predicted data (dashed)
+    \draw[thick, nhaiblue, dashed] (4.8, 1.0) -- (5.8, 0.75) -- (6.4, 0.55);
+    % IRC minimum threshold
+    \draw[dashed, criticalred] (0.8, 0.7) -- (6.5, 0.7);
+    \node[font=\tiny, criticalred, anchor=east] at (6.5, 0.85) {IRC min};
+    % Today marker
+    \draw[dashed, gray] (4.8, 0.45) -- (4.8, 1.8);
+    \node[font=\tiny, gray] at (4.8, 0.38) {Today};
+
+    % ==== Auto-Generated Reports Panel ====
+    \draw[gray!70, rounded corners=3pt] (7.1, 0.3) rectangle (13.7, 2.3);
+    \node[font=\small\bfseries, gray!80] at (10.4, 2.05) {Auto-Generated Reports};
+    \node[font=\scriptsize, anchor=west] at (7.4, 1.65) {$\triangleright$\; IRC~67 Compliance Report (PDF)};
+    \node[font=\scriptsize, anchor=west] at (7.4, 1.3) {$\triangleright$\; IRC~35 Compliance Report (PDF)};
+    \node[font=\scriptsize, anchor=west] at (7.4, 0.95) {$\triangleright$\; Maintenance Work Order (Excel)};
+    \node[font=\scriptsize, anchor=west] at (7.4, 0.6) {$\triangleright$\; Monthly Trend Analysis (Dashboard)};
+\end{tikzpicture}
+\caption{RetroGuard Digital Twin Dashboard mockup showing GIS map with asset health status, predictive alerts, degradation trending, and automated compliance reporting.}
 \label{fig:dashboard}
 \end{figure}
 
@@ -1272,74 +1355,6 @@ For the hackathon submission, we demonstrate:
     \item \textbf{Detection Model:} Fine-tuned YOLOv8 detecting Indian road signs and markings
     \item \textbf{Concept Video:} End-to-end system demonstration
 \end{enumerate}
-
-\subsection{Working Prototype --- Screenshots}
-
-The figures below capture the current state of the RetroGuard web command
-centre running against a seeded dataset of 200 assets across five national
-corridors (NH-48, NH-44, NH-27, NH-66, and the Delhi--Meerut Expressway).
-The dashboard itself is shown as Fig.~\ref{fig:dashboard} in
-Section~\ref{sec:layer5}.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{corridor-map.jpg}
-\caption{Corridor map (\texttt{/map}). Each marker is a monitored asset
-colour-coded by current $R_L$ health (green = compliant, amber = warning,
-red = critical). The right rail shows per-corridor health percentages and a
-critical-spotlight list of the worst three assets. Basemap can be toggled
-between street, satellite, and terrain layers.}
-\label{fig:screen-map}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{asset-registry.jpg}
-\caption{Asset registry (\texttt{/assets}). Filterable, sortable,
-paginated view of every monitored sign and marking. CSV import/export and
-``Add asset'' flows are wired to the FastAPI backend.}
-\label{fig:screen-assets}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{alerts-queue.jpg}
-\caption{Live alerts queue (\texttt{/alerts}). Alerts are generated
-automatically whenever a measurement drops an asset below IRC~67 / IRC~35
-thresholds. Severity cards double as filters; ``Resolve'' is an optimistic
-update against \texttt{PUT /api/alerts/:id/resolve}.}
-\label{fig:screen-alerts}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{measure-calibration.jpg}
-\caption{Field capture --- Step 1: calibration against the white
-reference patch (\texttt{/measure}). The app translates the camera's
-response to the known patch into the per-session brightness-to-$R_L$
-coefficient used for the live measurement.}
-\label{fig:screen-measure-calibration}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{measure-capture.jpg}
-\caption{Field capture --- Step 3: capture and result (\texttt{/measure}).
-A measurement of $R_L=125.3$ on an NH-48 thermoplastic road marking
-(IRC min $=150$) flips the asset status to \textbf{critical}; a live alert
-is automatically enqueued on the \texttt{/alerts} page.}
-\label{fig:screen-measure-capture}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{compliance-report.jpg}
-\caption{Compliance report (\texttt{/reports}). Per-corridor audit view
-with compliance rate, status breakdown, and per-asset-type compliance
-percentages. Period selector and PDF export are wired; critical assets
-requiring immediate attention are surfaced at the bottom.}
-\label{fig:screen-report}
-\end{figure}
 
 \subsection{Detection Model Training}
 
