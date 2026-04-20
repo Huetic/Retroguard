@@ -1,0 +1,11 @@
+asset_type,highway_id,chainage_km,gps_lat,gps_lon,material_grade,installation_date,orientation,irc_minimum_rl
+sign,NH-48,234.500,21.1700,72.8311,high_intensity,2022-07-15,left,250
+marking,NH-48,235.100,21.1720,72.8320,thermoplastic,2023-01-10,,150
+sign,NH-44,102.250,28.6139,77.2090,green_guide_prismatic,2021-11-04,overhead,250
+sign,NH-27,418.750,26.9124,75.7873,yellow_warning_prismatic,2020-08-21,right,250
+rpm,NH-66,67.400,15.2993,74.1240,ceramic_marker,2023-06-18,median,100
+delineator,NH-44,540.900,17.3850,78.4867,high_intensity,2022-02-12,left,120
+marking,DME,12.600,28.4595,77.0266,cold_plastic,2024-03-09,,150
+sign,DME,19.850,28.5355,77.3910,high_intensity,2023-09-25,left,250
+rpm,NH-27,422.300,26.8467,80.9462,raised_pavement_marker,2022-12-02,right,100
+delineator,NH-66,71.050,15.4909,73.8278,standard_reflector,2024-01-16,median,120

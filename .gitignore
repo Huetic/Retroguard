@@ -71,6 +71,8 @@ texput.log
 # ml/output/
 
 # --------- Misc ---------
+AGENTS.md
+.pids/
 *.tmp
 *.bak
 *.orig
